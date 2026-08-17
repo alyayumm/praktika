@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var first = window.location.pathname.split('/').filter(Boolean)[0];
+        var base = first === 'praktika' ? '/praktika/' : '/';
+        document.write('<base href="' + base + '">');
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta
+      name="description"
+      content="Практика — офлайн-образование для детей и взрослых: языки, автошкола, робототехника, школьные предметы, творчество и цифровые навыки."
+    />
+    <title>Практика — образовательный центр для детей и взрослых</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
