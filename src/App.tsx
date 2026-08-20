@@ -1,11 +1,14 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import {
   Audience,
+  allCourses,
   audienceLabels,
   branches,
+  directionPath,
   directions,
   findDirection,
   findProgram,
+  popularCourses,
   programPath,
   siteMap,
 } from './data';
@@ -13,10 +16,45 @@ import type { Branch, Direction, Program } from './data';
 
 const navItems = [
   { path: '/directions', label: 'Направления' },
-  { path: '/directions?audience=child', label: 'Детям' },
-  { path: '/directions?audience=self', label: 'Взрослым' },
+  { path: '/courses', label: 'Курсы' },
+  { path: '/children', label: 'Детям' },
+  { path: '/teens', label: 'Подросткам' },
+  { path: '/adults', label: 'Взрослым' },
   { path: '/branches', label: 'Филиалы' },
 ];
+
+const advantageBadges = [
+  {
+    title: 'Обучение через практику',
+    text: 'Пробуем, ошибаемся, разбираем и повторяем.',
+    icon: 'practice',
+  },
+  {
+    title: 'Небольшие группы',
+    text: 'Преподаватель видит темп и вопросы каждого.',
+    icon: 'group',
+  },
+  {
+    title: 'Преподаватели-практики',
+    text: 'Занятия строятся вокруг действия и обратной связи.',
+    icon: 'teacher',
+  },
+  {
+    title: 'Для разных возрастов',
+    text: 'От детских групп до взрослых маршрутов обучения.',
+    icon: 'ages',
+  },
+  {
+    title: 'Удобные филиалы',
+    text: 'Можно выбрать направление и ближайшую точку.',
+    icon: 'branch',
+  },
+  {
+    title: 'Первое занятие',
+    text: 'Формат знакомства перед выбором программы.',
+    icon: 'trial',
+  },
+] as const;
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/': {
@@ -27,6 +65,22 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   '/directions': {
     title: 'Направления обучения — Практика',
     description: 'Каталог направлений Практики для детей и взрослых с фильтром по аудитории и возрасту.',
+  },
+  '/courses': {
+    title: 'Все курсы — Практика',
+    description: 'Каталог полноценных курсов образовательного центра Практика: направления, аудитории, форматы и программы модулей.',
+  },
+  '/children': {
+    title: 'Курсы детям — Практика',
+    description: 'Подборка курсов Практики для детей без дублирования каталога направлений.',
+  },
+  '/teens': {
+    title: 'Курсы подросткам — Практика',
+    description: 'Подборка курсов Практики для подростков: экзамены, IT, языки, дизайн, творчество и профориентация.',
+  },
+  '/adults': {
+    title: 'Курсы взрослым — Практика',
+    description: 'Подборка курсов Практики для взрослых: языки, маркетинг, IT, AI, бизнес, продажи, финансы и творчество.',
   },
   '/branches': {
     title: 'Филиалы — Практика',
@@ -62,6 +116,13 @@ function deploymentBase() {
   return window.location.pathname.startsWith('/praktika') ? '/praktika' : '';
 }
 
+function audienceFromParam(value: string | null): Audience {
+  if (value === 'child' || value === 'children') return 'children';
+  if (value === 'teens') return 'teens';
+  if (value === 'self' || value === 'adults') return 'adults';
+  return 'adults';
+}
+
 function trackingFields() {
   const params = new URLSearchParams(window.location.search);
   const names = ['utm_source', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'yclid', 'roistat'];
@@ -75,7 +136,7 @@ export default function App() {
   const [route, setRoute] = useState(getRoute);
   const [audience, setAudience] = useState<Audience>(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('audience') === 'child' ? 'child' : 'self';
+    return audienceFromParam(params.get('audience'));
   });
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -96,8 +157,8 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const nextAudience = params.get('audience');
-    if (nextAudience === 'child' || nextAudience === 'self') {
-      setAudience(nextAudience);
+    if (nextAudience) {
+      setAudience(audienceFromParam(nextAudience));
     }
   }, [route]);
 
@@ -128,15 +189,31 @@ export default function App() {
 function getMeta(path: string) {
   if (pageMeta[path]) return pageMeta[path];
   const parts = path.split('/').filter(Boolean);
-  const direction = parts[0] ? findDirection(parts[0]) : undefined;
+  const directionSlug = parts[0] === 'directions' ? parts[1] : parts[0];
+  const direction = directionSlug ? findDirection(directionSlug) : undefined;
   if (direction && parts.length === 1) {
     return {
       title: `${direction.title} — Практика`,
       description: `${direction.summary} Запишитесь на пробное занятие или консультацию.`,
     };
   }
+  if (direction && parts[0] === 'directions' && parts.length === 2) {
+    return {
+      title: `${direction.title} — Практика`,
+      description: `${direction.summary} Выберите полноценный курс направления.`,
+    };
+  }
+  if (parts[0] === 'courses' && parts[1]) {
+    const { direction: courseDirection, program } = findProgram('courses', parts[1]);
+    if (courseDirection && program) {
+      return {
+        title: `${program.title} — ${courseDirection.title} — Практика`,
+        description: `${program.summary} Формат, филиал и стоимость уточняются после заявки.`,
+      };
+    }
+  }
   if (direction && parts[1]) {
-    const { program } = findProgram(parts[0], parts[1]);
+    const { program } = findProgram(direction.slug, parts[1]);
     if (program) {
       return {
         title: `${program.title} — ${direction.title} — Практика`,
@@ -169,6 +246,12 @@ function renderRoute(args: {
   if (path === '/directions') {
     return <DirectionsPage navigate={navigate} audience={audience} setAudience={setAudience} />;
   }
+  if (path === '/courses') {
+    return <CoursesPage navigate={navigate} audience={audience} setAudience={setAudience} />;
+  }
+  if (path === '/children' || path === '/teens' || path === '/adults') {
+    return <AudiencePage audience={parts[0] as Audience} navigate={navigate} />;
+  }
   if (path === '/branches') {
     return <BranchesPage navigate={navigate} />;
   }
@@ -177,6 +260,16 @@ function renderRoute(args: {
   }
   if (path === '/contacts') {
     return <ContactsPage />;
+  }
+  if (parts[0] === 'directions' && parts[1]) {
+    const direction = findDirection(parts[1]);
+    if (direction) return <DirectionPage direction={direction} navigate={navigate} />;
+  }
+  if (parts[0] === 'courses' && parts[1]) {
+    const { direction, program } = findProgram('courses', parts[1]);
+    if (direction && program) {
+      return <ProgramPage direction={direction} program={program} navigate={navigate} />;
+    }
   }
   if (parts.length === 1) {
     const direction = findDirection(parts[0]);
@@ -230,7 +323,7 @@ function Header({
             {item.label}
           </button>
         ))}
-        <button className="header-cta" type="button" onClick={() => navigate('/directions')}>
+        <button className="header-cta" type="button" onClick={() => navigate('/courses')}>
           Найти курс
         </button>
       </nav>
@@ -247,9 +340,10 @@ function HomePage({
   audience: Audience;
   setAudience: (audience: Audience) => void;
 }) {
-  const popularPrograms = directions.flatMap((direction) =>
-    direction.programs.slice(0, 1).map((program) => ({ direction, program })),
-  );
+  const popularPrograms = popularCourses.map((program) => ({
+    direction: findDirection(program.directionId) ?? directions[0],
+    program,
+  }));
 
   return (
     <>
@@ -262,15 +356,19 @@ function HomePage({
           </p>
           <div className="hero-actions">
             <button className="primary-button" type="button" onClick={() => navigate('/directions')}>
-              Подобрать занятие
+              Выбрать курс
             </button>
             <AudienceSwitch audience={audience} onChange={setAudience} />
           </div>
         </div>
-        <div className="hero-visual hero-visual--mascot" aria-hidden="true">
-          <img src="assets/mascot-main.png" alt="" />
+        <div className="hero-visual hero-visual--story" aria-hidden="true">
+          <img className="hero-space-photo" src="assets/home-reception.webp" alt="" />
+          <img className="hero-mascot-overlay" src="assets/mascot-main.png" alt="" />
         </div>
       </section>
+
+      <div className="home-flow">
+        <HomeFlowDecor />
 
       <section className="section section-directions" id="directions">
         <div className="section-heading split-heading">
@@ -285,27 +383,34 @@ function HomePage({
             Полный каталог
           </button>
         </div>
-        <DirectionRail directions={directions.slice(0, 4)} navigate={navigate} />
+        <DirectionRail directions={directions.slice(0, 6)} navigate={navigate} />
+        <img className="directions-peek-mascot" src="assets/mascot-main.png" alt="" aria-hidden="true" />
       </section>
 
       <section className="section how-section">
         <div className="section-heading">
-          <h2>Как работает «Практика»</h2>
-          <p>Каждое направление собирается вокруг одного цикла: проба, ошибка, разбор, повтор.</p>
+          <h2>Преимущества «Практики»</h2>
+          <p>Бейджи свисают из предыдущего блока и показывают, за счёт чего обучение ощущается живым, понятным и прикладным.</p>
         </div>
-        <div className="practice-loop" aria-label="Цикл обучения">
-          {['Пробуем', 'Ошибаемся', 'Разбираем', 'Повторяем'].map((item) => (
-            <div className="loop-step" key={item}>
-              <span>{item}</span>
-            </div>
-          ))}
+        <BenefitBadges />
+        <div className="story-photo-row story-photo-row--learning">
+          <StoryPhoto
+            src="assets/home-adults-dashboard.webp"
+            alt="Взрослые ученики разбирают учебный материал за ноутбуком в аудитории Практики."
+            caption="Разбор, вопрос, следующий шаг"
+          />
+          <StoryPhoto
+            src="assets/home-kids-certificates.webp"
+            alt="Дети держат сертификаты после занятия в образовательном центре Практика."
+            caption="Первый результат можно держать в руках"
+          />
         </div>
       </section>
 
       <section className="section audience-section">
         <div className="audience-panel">
           <div>
-            <h2>Для себя или для ребёнка</h2>
+            <h2>Для детей, подростков и взрослых</h2>
             <p>
               Один бренд, но разные сценарии выбора: взрослым важны цель, график и результат;
               родителям — возраст, безопасность маршрута и понятная обратная связь.
@@ -325,7 +430,7 @@ function HomePage({
 
       <section className="section section-blue">
         <div className="section-heading">
-          <h2>Популярные программы</h2>
+          <h2>Популярные курсы</h2>
           <p>Сейчас это стартовая витрина. Цены, расписание и преподаватели ждут подтверждённых данных.</p>
         </div>
         <div className="program-grid">
@@ -337,6 +442,20 @@ function HomePage({
               navigate={navigate}
             />
           ))}
+        </div>
+        <div className="course-photo-pair" aria-label="Занятия в Практике">
+          <StoryPhoto
+            src="assets/home-art-teacher.webp"
+            alt="Преподаватель творческого курса рисует фирменный цветок на занятии."
+            caption="Творчество с преподавателем"
+            variant="portrait"
+          />
+          <StoryPhoto
+            src="assets/home-driving-instructor.webp"
+            alt="Инструктор автошколы у синего автомобиля держит планшет и ключ."
+            caption="Автошкола как понятный маршрут"
+            variant="portrait"
+          />
         </div>
       </section>
 
@@ -351,7 +470,12 @@ function HomePage({
             Выбрать филиал
           </button>
         </div>
-        <BranchList compact />
+        <div className="branch-stack">
+          <figure className="branch-photo">
+            <img src="assets/home-reception.webp" alt="Ресепшен и зона ожидания образовательного центра Практика." loading="lazy" />
+          </figure>
+          <BranchList compact />
+        </div>
       </section>
 
       <section className="section people-section">
@@ -361,6 +485,25 @@ function HomePage({
             Блок предусмотрен в структуре. Имена, роли, фото и опыт не добавлены, потому
             что в ТЗ нет подтверждённых данных.
           </p>
+        </div>
+        <div className="people-gallery people-gallery--three">
+          <StoryPhoto
+            src="assets/home-method-cards.webp"
+            alt="Сотрудник Практики раскладывает карточки методики на учебном столе."
+            caption="Методика собирается руками"
+            variant="portrait"
+          />
+          <StoryPhoto
+            src="assets/home-robotics-teacher.webp"
+            alt="Преподаватель робототехники держит учебного робота в аудитории."
+            caption="Преподаватели показывают на практике"
+            variant="portrait"
+          />
+          <StoryPhoto
+            src="assets/home-team-kitchen.webp"
+            alt="Команда Практики общается в зоне кофе с фирменными кружками."
+            caption="Центр живёт не только в аудитории"
+          />
         </div>
         <div className="confirmation-strip">
           <span>Требуется контент</span>
@@ -390,7 +533,143 @@ function HomePage({
       </section>
 
       <LeadSection selectedDirection={directions[0]} />
+      </div>
     </>
+  );
+}
+
+function HomeFlowDecor() {
+  return (
+    <div className="flow-decor" aria-hidden="true">
+      <span className="flow-blob flow-blob--one" />
+      <span className="flow-blob flow-blob--two" />
+      <span className="flow-blob flow-blob--three" />
+      <svg className="flow-line flow-line--one" viewBox="0 0 1200 520" role="presentation" focusable="false">
+        <path d="M-20 160 C170 20 330 350 520 185 C700 28 780 410 980 250 C1100 154 1160 200 1230 138" />
+      </svg>
+      <svg className="flow-line flow-line--two" viewBox="0 0 1200 520" role="presentation" focusable="false">
+        <path d="M40 420 C220 290 180 95 390 150 C560 195 500 395 720 365 C910 335 890 105 1150 150" />
+      </svg>
+      <svg className="flow-line flow-line--three" viewBox="0 0 1200 520" role="presentation" focusable="false">
+        <path d="M-10 260 C150 110 320 430 470 245 C620 60 730 120 790 280 C850 445 1030 390 1220 210" />
+      </svg>
+    </div>
+  );
+}
+
+function StoryPhoto({
+  src,
+  alt,
+  caption,
+  variant,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+  variant?: 'portrait';
+}) {
+  return (
+    <figure className={variant ? `story-photo story-photo--${variant}` : 'story-photo'}>
+      <img src={src} alt={alt} loading="lazy" />
+      <figcaption>{caption}</figcaption>
+    </figure>
+  );
+}
+
+function BenefitBadges() {
+  return (
+    <div className="benefit-badge-rail" aria-label="Преимущества Практики">
+      {advantageBadges.map((badge, index) => (
+        <div className={`benefit-hanger benefit-hanger--${index + 1}`} key={badge.title}>
+          <span className="badge-strap" />
+          <span className="badge-clip" />
+          <article className="benefit-badge">
+            <span className="badge-ring" />
+            <div className={`badge-pattern badge-pattern--${index + 1}`} aria-hidden="true">
+              <span />
+            </div>
+            <div className="badge-body">
+              <BenefitIcon icon={badge.icon} />
+              <h3>{badge.title}</h3>
+              <p>{badge.text}</p>
+            </div>
+          </article>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BenefitIcon({ icon }: { icon: (typeof advantageBadges)[number]['icon'] }) {
+  const common = {
+    width: 42,
+    height: 42,
+    viewBox: '0 0 48 48',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg',
+    'aria-hidden': true,
+  };
+
+  if (icon === 'practice') {
+    return (
+      <svg className="badge-icon" {...common}>
+        <path d="M9 30c7-15 19-17 30-12" />
+        <path d="M15 32c7 6 17 6 25-2" />
+        <path d="M31 10l7 7-8 2" />
+      </svg>
+    );
+  }
+
+  if (icon === 'group') {
+    return (
+      <svg className="badge-icon" {...common}>
+        <path d="M16 20a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
+        <path d="M32 22a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
+        <path d="M7 39c2-8 8-12 16-10 5 1 8 4 10 10" />
+        <path d="M27 30c6-1 11 2 14 8" />
+      </svg>
+    );
+  }
+
+  if (icon === 'teacher') {
+    return (
+      <svg className="badge-icon" {...common}>
+        <path d="M12 34V13h24v17" />
+        <path d="M17 18h14" />
+        <path d="M17 24h9" />
+        <path d="M30 36l5 5 6-14" />
+      </svg>
+    );
+  }
+
+  if (icon === 'ages') {
+    return (
+      <svg className="badge-icon" {...common}>
+        <path d="M12 34c0-8 4-13 10-13s10 5 10 13" />
+        <path d="M22 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
+        <path d="M34 31c4 1 7 4 8 8" />
+        <path d="M34 22a4 4 0 1 0 0-8" />
+      </svg>
+    );
+  }
+
+  if (icon === 'branch') {
+    return (
+      <svg className="badge-icon" {...common}>
+        <path d="M12 40V18l12-8 12 8v22" />
+        <path d="M20 40V27h8v13" />
+        <path d="M14 20h20" />
+        <path d="M10 40h28" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg className="badge-icon" {...common}>
+      <path d="M12 12h24v24H12z" />
+      <path d="M18 25l5 5 9-12" />
+      <path d="M10 18c4-5 8-7 14-7" />
+    </svg>
   );
 }
 
@@ -439,6 +718,90 @@ function DirectionsPage({
   );
 }
 
+function CoursesPage({
+  navigate,
+  audience,
+  setAudience,
+}: {
+  navigate: (path: string) => void;
+  audience: Audience;
+  setAudience: (audience: Audience) => void;
+}) {
+  const [directionSlug, setDirectionSlug] = useState<Direction['slug'] | 'all'>('all');
+  const filtered = allCourses.filter((program) => {
+    const audienceMatch = program.audience.includes(audience);
+    const directionMatch = directionSlug === 'all' || program.directionId === directionSlug;
+    return audienceMatch && directionMatch;
+  });
+
+  return (
+    <InnerPage
+      title="Все курсы"
+      intro="Каталог показывает полноценные образовательные программы. Небольшие темы вроде УТП, UTM-меток или возражений находятся внутри модулей курса."
+    >
+      <div className="filters-row">
+        <AudienceSwitch audience={audience} onChange={setAudience} />
+        <label className="field compact-field">
+          <span>Направление</span>
+          <select value={directionSlug} onChange={(event) => setDirectionSlug(event.target.value as Direction['slug'] | 'all')}>
+            <option value="all">Все направления</option>
+            {directions.map((direction) => (
+              <option key={direction.slug} value={direction.slug}>
+                {direction.title}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <div className="program-grid">
+        {filtered.map((program) => (
+          <ProgramCard
+            key={program.id}
+            direction={findDirection(program.directionId) ?? directions[0]}
+            program={program}
+            navigate={navigate}
+          />
+        ))}
+      </div>
+      {filtered.length === 0 ? (
+        <div className="empty-state">Для выбранной связки пока нет курса. Попробуйте другую аудиторию или направление.</div>
+      ) : null}
+    </InnerPage>
+  );
+}
+
+function AudiencePage({ audience, navigate }: { audience: Audience; navigate: (path: string) => void }) {
+  const audienceDirections = directions.filter((direction) => direction.audience.includes(audience));
+  const audienceCourses = allCourses.filter((program) => program.audience.includes(audience));
+
+  return (
+    <InnerPage
+      title={`Курсы ${audienceLabels[audience].toLowerCase()}`}
+      intro="Это подборка тех же курсов по аудитории. Курсы не дублируются: они остаются привязанными к своим направлениям."
+    >
+      <div className="catalog-grid">
+        {audienceDirections.slice(0, 6).map((direction) => (
+          <DirectionCard key={direction.slug} direction={direction} navigate={navigate} />
+        ))}
+      </div>
+      <div className="section-heading compact-after">
+        <h2>Подходящие курсы</h2>
+        <p>Выберите цельную программу и откройте её модули.</p>
+      </div>
+      <div className="program-grid">
+        {audienceCourses.map((program) => (
+          <ProgramCard
+            key={program.id}
+            direction={findDirection(program.directionId) ?? directions[0]}
+            program={program}
+            navigate={navigate}
+          />
+        ))}
+      </div>
+    </InnerPage>
+  );
+}
+
 function DirectionPage({
   direction,
   navigate,
@@ -459,11 +822,11 @@ function DirectionPage({
           navigate={navigate}
         />
         <div className="section-heading">
-          <h2>Программы направления</h2>
-          <p>Каждая программа может стать отдельной страницей с расписанием, ценой и филиалами.</p>
+          <h2>Курсы направления</h2>
+          <p>Здесь собраны цельные образовательные программы. Отдельные темы и навыки остаются внутри модулей курса.</p>
         </div>
         <div className="program-grid">
-          {direction.programs.map((program) => (
+          {direction.courses.map((program) => (
             <ProgramCard key={program.slug} direction={direction} program={program} navigate={navigate} />
           ))}
         </div>
@@ -528,7 +891,7 @@ function ProgramPage({
         <Breadcrumbs
           items={[
             { label: 'Главная', path: '/' },
-            { label: direction.title, path: `/${direction.slug}` },
+            { label: direction.title, path: directionPath(direction) },
             { label: program.title },
           ]}
           navigate={navigate}
@@ -536,7 +899,7 @@ function ProgramPage({
         <div className="program-hero-grid">
           <div>
             <h1>{program.title}</h1>
-            <p>{program.summary}</p>
+            <p>{program.description}</p>
             <button className="primary-button" type="button" onClick={() => navigate('/contacts')}>
               Записаться на консультацию
             </button>
@@ -545,19 +908,27 @@ function ProgramPage({
             <span>Возраст</span>
             <strong>{program.age}</strong>
             <span>Формат</span>
-            <p>{program.format}</p>
+            <p>{program.formatLabel}</p>
           </div>
         </div>
       </section>
       <section className="section detail-grid-section">
         <InfoPanel title="Описание">
-          <p>{program.summary}</p>
+          <p>{program.description}</p>
         </InfoPanel>
         <InfoPanel title="Программа">
-          <p>
-            Подробные модули, расписание и материалы нужно добавить после утверждения
-            учебной программы.
-          </p>
+          <div className="module-list">
+            {program.modules.map((module) => (
+              <div className="course-module" key={module.title}>
+                <h3>{module.title}</h3>
+                <ul>
+                  {module.topics.map((topic) => (
+                    <li key={topic}>{topic}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </InfoPanel>
         <InfoPanel title="Результат">
           <p>{program.result}</p>
@@ -717,7 +1088,7 @@ function DirectionHero({ direction, navigate }: { direction: Direction; navigate
 function AudienceSwitch({ audience, onChange }: { audience: Audience; onChange: (audience: Audience) => void }) {
   return (
     <div className="audience-switch" role="group" aria-label="Выбор аудитории">
-      {(['self', 'child'] as Audience[]).map((item) => (
+      {(['children', 'teens', 'adults'] as Audience[]).map((item) => (
         <button
           type="button"
           key={item}
@@ -750,14 +1121,18 @@ function DirectionCard({
   navigate: (path: string) => void;
   compact?: boolean;
 }) {
+  const examples = direction.courses.slice(0, 4).map((program) => program.title).join(' · ');
+
   return (
     <article className={compact ? 'direction-card compact' : 'direction-card'}>
       <img src={direction.image} alt="" />
       <div>
         <h3>{direction.shortTitle}</h3>
+        <strong className="direction-count">{direction.courses.length} курсов</strong>
         <p>{direction.summary}</p>
-        <button className="text-button" type="button" onClick={() => navigate(`/${direction.slug}`)}>
-          Открыть направление
+        <p className="direction-examples">{examples}</p>
+        <button className="text-button" type="button" onClick={() => navigate(directionPath(direction))}>
+          Смотреть курсы
         </button>
       </div>
     </article>
@@ -766,7 +1141,7 @@ function DirectionCard({
 
 function MiniDirection({ direction, navigate }: { direction: Direction; navigate: (path: string) => void }) {
   return (
-    <button className="mini-direction" type="button" onClick={() => navigate(`/${direction.slug}`)}>
+    <button className="mini-direction" type="button" onClick={() => navigate(directionPath(direction))}>
       <span>{direction.shortTitle}</span>
       <small>{direction.ages.join(' / ')}</small>
     </button>
@@ -788,8 +1163,12 @@ function ProgramCard({
         <span>{direction.shortTitle}</span>
         <strong>{program.age}</strong>
       </div>
+      <div className="program-meta">
+        <span>{program.audience.map((item) => audienceLabels[item]).join(' · ')}</span>
+        <span>{program.formatLabel}</span>
+      </div>
       <h3>{program.title}</h3>
-      <p>{program.summary}</p>
+      <p>{program.description}</p>
       <button className="text-button" type="button" onClick={() => navigate(programPath(direction, program))}>
         Подробнее
       </button>
@@ -858,6 +1237,10 @@ function LeadSection({
           Форма локальная: она показывает успешную отправку на сайте и собирает поля,
           которые позже можно передать в amoCRM.
         </p>
+        <div className="lead-brand-row" aria-hidden="true">
+          <BrandLogo />
+          <img src="assets/mascot-main.png" alt="" />
+        </div>
       </div>
       <LeadForm selectedDirection={selectedDirection} selectedProgram={selectedProgram} />
     </section>
@@ -968,7 +1351,7 @@ function RelatedDirections({
           .filter((direction) => direction.slug !== active)
           .slice(0, 4)
           .map((direction) => (
-            <button key={direction.slug} type="button" onClick={() => navigate(`/${direction.slug}`)}>
+            <button key={direction.slug} type="button" onClick={() => navigate(directionPath(direction))}>
               {direction.shortTitle}
             </button>
           ))}
