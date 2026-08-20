@@ -150,6 +150,10 @@ function getMeta(path: string) {
   };
 }
 
+function BrandLogo() {
+  return <img className="brand-logo" src="assets/logo-praktika.png" alt="Практика" />;
+}
+
 function renderRoute(args: {
   path: string;
   navigate: (path: string) => void;
@@ -201,8 +205,7 @@ function Header({
   return (
     <header className="site-header">
       <button className="brand-link" type="button" onClick={() => navigate('/')} aria-label="На главную">
-        <span className="brand-mark">П</span>
-        <span className="brand-word">ПРАКТИКА</span>
+        <BrandLogo />
       </button>
       <button
         className="menu-toggle"
@@ -1003,8 +1006,7 @@ function Footer({ navigate }: { navigate: (path: string) => void }) {
     <footer className="site-footer">
       <div>
         <button className="brand-link footer-brand" type="button" onClick={() => navigate('/')}>
-          <span className="brand-mark">П</span>
-          <span className="brand-word">ПРАКТИКА</span>
+          <BrandLogo />
         </button>
         <p>Офлайн-образование через действие для детей и взрослых.</p>
       </div>
