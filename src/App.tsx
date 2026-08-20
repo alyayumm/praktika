@@ -344,26 +344,60 @@ function HomePage({
     direction: findDirection(program.directionId) ?? directions[0],
     program,
   }));
+  const featuredDirections = ['languages', 'driving', 'robotics', 'school', 'creative', 'it']
+    .map((slug) => findDirection(slug))
+    .filter((direction): direction is Direction => Boolean(direction));
+  const audienceStages = [
+    {
+      label: 'Детям',
+      text: 'Играть, пробовать, узнавать мир',
+      image: 'assets/home-kids-certificates.webp',
+      path: '/children',
+    },
+    {
+      label: 'Подросткам',
+      text: 'Найти интерес и разложить навыки',
+      image: 'assets/home-robotics.webp',
+      path: '/teens',
+    },
+    {
+      label: 'Взрослым',
+      text: 'Осваивать новое для работы и жизни',
+      image: 'assets/home-adults-dashboard.webp',
+      path: '/adults',
+    },
+  ];
 
   return (
     <>
       <section className="hero section-dark">
         <div className="hero-copy">
-          <h1>Учиться получается, когда начинаешь делать</h1>
+          <h1>Сегодня можно научиться новому</h1>
           <p>
-            «Практика» объединяет офлайн-направления для детей и взрослых: языки,
-            автошколу, робототехнику, школьные предметы, творчество и цифровые навыки.
+            Офлайн-занятия для детей, подростков и взрослых: языки, автошкола,
+            робототехника, школьные предметы, творчество и цифровые навыки.
           </p>
           <div className="hero-actions">
             <button className="primary-button" type="button" onClick={() => navigate('/directions')}>
-              Выбрать курс
+              Подобрать занятие
             </button>
             <AudienceSwitch audience={audience} onChange={setAudience} />
           </div>
         </div>
-        <div className="hero-visual hero-visual--story" aria-hidden="true">
-          <img className="hero-space-photo" src="assets/home-reception.webp" alt="" />
-          <img className="hero-mascot-overlay" src="assets/mascot-main.png" alt="" />
+        <div className="hero-visual hero-visual--reference" aria-hidden="true">
+          <img className="hero-main-mascot" src="assets/mascot-main.png" alt="" />
+          <figure className="hero-bubble hero-bubble--robotics">
+            <img src="assets/home-robotics.webp" alt="" />
+            <figcaption>Робототехника для детей</figcaption>
+          </figure>
+          <figure className="hero-bubble hero-bubble--driving">
+            <img src="assets/home-driving-instructor.webp" alt="" />
+            <figcaption>Вождение с нуля</figcaption>
+          </figure>
+          <figure className="hero-bubble hero-bubble--english">
+            <img src="assets/home-discussion.webp" alt="" />
+            <figcaption>Английский для общения</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -383,14 +417,38 @@ function HomePage({
             Полный каталог
           </button>
         </div>
-        <DirectionRail directions={directions.slice(0, 6)} navigate={navigate} />
+        <DirectionRail directions={featuredDirections} navigate={navigate} />
         <img className="directions-peek-mascot" src="assets/mascot-main.png" alt="" aria-hidden="true" />
+      </section>
+
+      <section className="section audience-section">
+        <div className="audience-panel">
+          <div>
+            <h2>Занятия для каждого этапа</h2>
+            <p>
+              Выберите возрастной сценарий: сайт покажет направления, которые проще
+              сравнивать именно для этой аудитории.
+            </p>
+          </div>
+          <AudienceSwitch audience={audience} onChange={setAudience} />
+        </div>
+        <div className="audience-stage-grid">
+          {audienceStages.map((stage) => (
+            <AudienceStageCard
+              key={stage.label}
+              label={stage.label}
+              text={stage.text}
+              image={stage.image}
+              onClick={() => navigate(stage.path)}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="section how-section">
         <div className="section-heading">
-          <h2>Преимущества «Практики»</h2>
-          <p>Бейджи свисают из предыдущего блока и показывают, за счёт чего обучение ощущается живым, понятным и прикладным.</p>
+          <h2>Не просто слушать — делать</h2>
+          <p>Подвесные бейджи свисают из предыдущего блока и показывают, за счёт чего обучение ощущается живым, понятным и прикладным.</p>
         </div>
         <BenefitBadges />
         <div className="story-photo-row story-photo-row--learning">
@@ -407,28 +465,7 @@ function HomePage({
         </div>
       </section>
 
-      <section className="section audience-section">
-        <div className="audience-panel">
-          <div>
-            <h2>Для детей, подростков и взрослых</h2>
-            <p>
-              Один бренд, но разные сценарии выбора: взрослым важны цель, график и результат;
-              родителям — возраст, безопасность маршрута и понятная обратная связь.
-            </p>
-          </div>
-          <AudienceSwitch audience={audience} onChange={setAudience} />
-        </div>
-        <div className="audience-grid">
-          {directions
-            .filter((direction) => direction.audience.includes(audience))
-            .slice(0, 3)
-            .map((direction) => (
-              <MiniDirection key={direction.slug} direction={direction} navigate={navigate} />
-            ))}
-        </div>
-      </section>
-
-      <section className="section section-blue">
+      <section className="section section-blue popular-section">
         <div className="section-heading">
           <h2>Популярные курсы</h2>
           <p>Сейчас это стартовая витрина. Цены, расписание и преподаватели ждут подтверждённых данных.</p>
@@ -573,6 +610,26 @@ function StoryPhoto({
       <img src={src} alt={alt} loading="lazy" />
       <figcaption>{caption}</figcaption>
     </figure>
+  );
+}
+
+function AudienceStageCard({
+  label,
+  text,
+  image,
+  onClick,
+}: {
+  label: string;
+  text: string;
+  image: string;
+  onClick: () => void;
+}) {
+  return (
+    <button className="audience-stage-card" type="button" onClick={onClick}>
+      <img src={image} alt="" loading="lazy" />
+      <span>{label}</span>
+      <strong>{text}</strong>
+    </button>
   );
 }
 
@@ -1159,6 +1216,9 @@ function ProgramCard({
 }) {
   return (
     <article className="program-card">
+      {program.image ? (
+        <img className="program-card-image" src={program.image} alt="" loading="lazy" />
+      ) : null}
       <div className="program-card-top">
         <span>{direction.shortTitle}</span>
         <strong>{program.age}</strong>

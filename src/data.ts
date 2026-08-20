@@ -35,6 +35,7 @@ export interface Course {
   age?: string;
   format: CourseFormat;
   formatLabel: string;
+  image?: string;
   duration?: string;
   groupSize?: string;
   popular?: boolean;
@@ -209,14 +210,18 @@ export const directions: Direction[] = [
     ages: ['6+', '12+', '18+'],
     doodle: 'Речевые облака, подчёркивания и правки',
     image: 'assets/direction-icon-languages.png',
+    heroImage: 'assets/mascot-languages-flags.webp',
     courses: [
-      course({ directionId: 'languages', slug: 'english-a1', title: 'Английский A1', description: 'Полноценный стартовый курс английского языка для базового общения.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', popular: true, result: 'Ученик понимает базовые фразы и начинает говорить в простых ситуациях.' }),
-      course({ directionId: 'languages', slug: 'english-a2', title: 'Английский A2', description: 'Курс для продолжения: бытовые темы, грамматика и регулярная разговорная практика.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Появляется устойчивый словарь для повседневного общения.' }),
-      course({ directionId: 'languages', slug: 'english-b1', title: 'Английский B1', description: 'Программа для уверенного общения, чтения и обсуждения знакомых тем.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Ученик поддерживает диалог и объясняет свою мысль без долгой подготовки.' }),
-      course({ directionId: 'languages', slug: 'spoken-english', title: 'Разговорный английский', description: 'Практический курс для диалогов, обсуждений и снятия языкового барьера.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · мини-группы', popular: true, result: 'Больше живой речи и меньше страха ошибиться.' }),
-      course({ directionId: 'languages', slug: 'business-english', title: 'Деловой английский', description: 'Курс для рабочих ситуаций: переписка, встречи, презентации и переговоры.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Ученик готовит рабочие фразы и сценарии под свою профессиональную задачу.' }),
-      course({ directionId: 'languages', slug: 'english-kids', title: 'Английский для детей', description: 'Мягкое знакомство с языком через речь, игры, повторение и обратную связь.', audience: ['children'], age: '6+', format: 'course', formatLabel: 'Офлайн · детские группы', result: 'Ребёнок понимает простые фразы и отвечает вслух.' }),
-      course({ directionId: 'languages', slug: 'chinese-start', title: 'Китайский с нуля', description: 'Базовая программа китайского языка для первого системного входа.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Появляется понятная база произношения, иероглифики и простых диалогов.' }),
+      course({ directionId: 'languages', slug: 'english-a1', title: 'Английский A1', description: 'Полноценный стартовый курс английского языка для базового общения.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', popular: true, result: 'Ученик понимает базовые фразы и начинает говорить в простых ситуациях.' }),
+      course({ directionId: 'languages', slug: 'english-a2', title: 'Английский A2', description: 'Курс для продолжения: бытовые темы, грамматика и регулярная разговорная практика.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Появляется устойчивый словарь для повседневного общения.' }),
+      course({ directionId: 'languages', slug: 'english-b1', title: 'Английский B1', description: 'Программа для уверенного общения, чтения и обсуждения знакомых тем.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Ученик поддерживает диалог и объясняет свою мысль без долгой подготовки.' }),
+      course({ directionId: 'languages', slug: 'spoken-english', title: 'Разговорный английский', description: 'Практический курс для диалогов, обсуждений и снятия языкового барьера.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · мини-группы', image: 'assets/mascot-english-guard.webp', popular: true, result: 'Больше живой речи и меньше страха ошибиться.' }),
+      course({ directionId: 'languages', slug: 'business-english', title: 'Деловой английский', description: 'Курс для рабочих ситуаций: переписка, встречи, презентации и переговоры.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Ученик готовит рабочие фразы и сценарии под свою профессиональную задачу.' }),
+      course({ directionId: 'languages', slug: 'english-kids', title: 'Английский для детей', description: 'Мягкое знакомство с языком через речь, игры, повторение и обратную связь.', audience: ['children'], age: '6+', format: 'course', formatLabel: 'Офлайн · детские группы', image: 'assets/mascot-english-guard.webp', result: 'Ребёнок понимает простые фразы и отвечает вслух.' }),
+      course({ directionId: 'languages', slug: 'french-start', title: 'Французский с нуля', description: 'Стартовый курс французского языка: произношение, базовые фразы и первые диалоги.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-french-baguette.webp', result: 'Ученик начинает читать, произносить и говорить в простых ситуациях.' }),
+      course({ directionId: 'languages', slug: 'italian-start', title: 'Итальянский с нуля', description: 'Базовая программа итальянского языка для путешествий, общения и регулярной практики.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-italian-vespa.webp', result: 'Появляется первый словарь, понятная грамматика и уверенность в простом диалоге.' }),
+      course({ directionId: 'languages', slug: 'japanese-start', title: 'Японский с нуля', description: 'Вход в японский язык через письменность, произношение, лексику и культурный контекст.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-japanese.webp', result: 'Ученик понимает базовую структуру языка и делает первые письменные и устные шаги.' }),
+      course({ directionId: 'languages', slug: 'chinese-start', title: 'Китайский с нуля', description: 'Базовая программа китайского языка для первого системного входа.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-chinese.webp', result: 'Появляется понятная база произношения, иероглифики и простых диалогов.' }),
     ],
     outcomes: ['говорить в бытовых и учебных ситуациях', 'понимать свои типовые ошибки', 'держать регулярный темп практики'],
     faqs: [
@@ -275,6 +280,7 @@ export const directions: Direction[] = [
     ages: ['8+', '12+', '16+', '18+'],
     doodle: 'Курсоры, сетки, окна и пиксельные элементы',
     image: 'assets/direction-icon-digital.png',
+    heroImage: 'assets/mascot-it-github.webp',
     courses: [
       course({ directionId: 'it', slug: 'python-start', title: 'Python-разработчик с нуля', description: 'Курс основ программирования на Python: синтаксис, алгоритмы, данные и проекты.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · группы', popular: true, result: 'Ученик пишет простые программы и понимает базовую структуру кода.' }),
       course({ directionId: 'it', slug: 'frontend-developer', title: 'Frontend-разработчик', description: 'HTML, CSS, JavaScript и создание интерфейсов в рамках цельной программы.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Ученик собирает свои первые веб-интерфейсы.' }),
