@@ -28,6 +28,7 @@ export interface Direction {
   ages: string[];
   doodle: string;
   image: string;
+  heroImage?: string;
   programs: Program[];
   outcomes: string[];
   faqs: Array<{ question: string; answer: string }>;
@@ -57,7 +58,7 @@ export const directions: Direction[] = [
     audience: ['self', 'child'],
     ages: ['6+', '12+', '18+'],
     doodle: 'Речевые облака, подчёркивания и правки',
-    image: 'assets/direction-languages.png',
+    image: 'assets/direction-icon-languages.png',
     programs: [
       {
         slug: 'english-adults',
@@ -104,7 +105,8 @@ export const directions: Direction[] = [
     audience: ['self'],
     ages: ['16+', '18+'],
     doodle: 'Траектории, стрелки, разметка и движение',
-    image: 'assets/direction-driving.png',
+    image: 'assets/direction-icon-driving.png',
+    heroImage: 'assets/mascot-driving.png',
     programs: [
       {
         slug: 'category-b',
@@ -151,7 +153,7 @@ export const directions: Direction[] = [
     audience: ['child'],
     ages: ['7+', '10+', '12+'],
     doodle: 'Схемы, провода и детали',
-    image: 'assets/direction-robotics.png',
+    image: 'assets/direction-icon-robotics.png',
     programs: [
       {
         slug: 'robotics-8-12',
@@ -185,7 +187,7 @@ export const directions: Direction[] = [
     audience: ['child'],
     ages: ['7+', '10+', '14+'],
     doodle: 'Формулы, черновые записи и исправления',
-    image: 'assets/direction-school.png',
+    image: 'assets/direction-icon-school.png',
     programs: [
       {
         slug: 'math-support',
@@ -219,7 +221,8 @@ export const directions: Direction[] = [
     audience: ['self', 'child'],
     ages: ['5+', '12+', '18+'],
     doodle: 'Мазки, карандашные следы и бумага',
-    image: 'assets/direction-creative.png',
+    image: 'assets/direction-icon-creative.png',
+    heroImage: 'assets/mascot-creative.png',
     programs: [
       {
         slug: 'creative-lab',
@@ -253,7 +256,7 @@ export const directions: Direction[] = [
     audience: ['self', 'child'],
     ages: ['10+', '14+', '18+'],
     doodle: 'Курсоры, сетки, окна и пиксельные элементы',
-    image: 'assets/direction-digital.png',
+    image: 'assets/direction-icon-digital.png',
     programs: [
       {
         slug: 'digital-start',

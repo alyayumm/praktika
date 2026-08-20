@@ -297,6 +297,15 @@ p {
   border-radius: var(--radius);
 }
 
+.direction-art.mascot-art img {
+  width: min(100%, 470px);
+  object-fit: contain;
+  padding: clamp(0.4rem, 1vw, 0.9rem);
+  background:
+    radial-gradient(circle at 54% 44%, oklch(0.69 0.19 260 / 0.28), transparent 48%),
+    linear-gradient(145deg, oklch(1 0 0 / 0.08), oklch(1 0 0 / 0.02));
+}
+
 .primary-button,
 .secondary-button {
   min-width: 12rem;
@@ -408,7 +417,7 @@ p {
 
 .direction-card img {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1.2 / 1;
   object-fit: cover;
   border-radius: var(--radius);
   background: var(--blue-soft);

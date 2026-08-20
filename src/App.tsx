@@ -676,6 +676,8 @@ function InnerPage({ title, intro, children }: { title: string; intro: string; c
 }
 
 function DirectionHero({ direction, navigate }: { direction: Direction; navigate: (path: string) => void }) {
+  const heroImage = direction.heroImage ?? direction.image;
+
   return (
     <section className="direction-hero section-dark">
       <Breadcrumbs
@@ -703,8 +705,8 @@ function DirectionHero({ direction, navigate }: { direction: Direction; navigate
             Записаться на пробное
           </button>
         </div>
-        <div className="direction-art">
-          <img src={direction.image} alt="" />
+        <div className={direction.heroImage ? 'direction-art mascot-art' : 'direction-art'}>
+          <img src={heroImage} alt="" />
           <p>{direction.doodle}</p>
         </div>
       </div>
