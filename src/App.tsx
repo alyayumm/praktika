@@ -151,7 +151,7 @@ function getMeta(path: string) {
 }
 
 function BrandLogo() {
-  return <img className="brand-logo" src="assets/logo-praktika.png" alt="Практика" />;
+  return <img className="brand-logo" src="assets/logo-praktika.png?v=20260820b" alt="Практика" />;
 }
 
 function renderRoute(args: {
