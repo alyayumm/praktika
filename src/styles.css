@@ -60,10 +60,16 @@ button {
 }
 
 button:focus-visible,
+a:focus-visible,
 input:focus-visible,
 select:focus-visible {
   outline: none;
   box-shadow: var(--focus);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 img {
@@ -234,21 +240,22 @@ p {
   gap: 1rem;
   width: min(calc(100% - 2rem), var(--max));
   margin: 0 auto;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid oklch(1 0 0 / 0.4);
-  border-radius: 999px;
-  background: oklch(1 0 0 / 0.78);
-  backdrop-filter: blur(18px);
+  padding: 0.6rem 0;
+  border: 0;
+  border-radius: 0;
+  background: rgb(20 20 22 / 0.84);
+  color: var(--white);
+  backdrop-filter: blur(16px);
 }
 
 .brand-link {
   display: inline-flex;
   align-items: center;
-  border: 0;
+  border: 1px solid rgb(246 247 246 / 0.74);
   border-radius: 999px;
-  background: transparent;
+  background: rgb(246 247 246 / 0.92);
   color: var(--ink);
-  padding: 0.2rem 0.35rem;
+  padding: 0.18rem 0.46rem;
   text-align: left;
 }
 
@@ -264,10 +271,10 @@ p {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.35rem;
-  border: 1px solid oklch(1 0 0 / 0.22);
+  padding: 0.2rem;
+  border: 1px solid rgb(255 255 255 / 0.13);
   border-radius: 999px;
-  background: oklch(1 0 0 / 0.74);
+  background: rgb(255 255 255 / 0.04);
 }
 
 .nav-link,
@@ -287,19 +294,19 @@ p {
 .nav-link {
   border-radius: 999px;
   background: transparent;
-  color: var(--ink);
+  color: rgb(246 247 246 / 0.9);
   padding: 0.7rem 1rem;
 }
 
 .nav-link.is-active,
 .nav-link:hover {
-  background: var(--blue-soft);
-  color: var(--blue-dark);
+  background: var(--blue);
+  color: var(--white);
 }
 
 .header-cta {
   border-radius: 999px;
-  background: var(--graphite);
+  background: var(--blue);
   color: var(--white);
   padding: 0.7rem 1rem;
 }
@@ -308,10 +315,10 @@ p {
   display: none;
   width: 48px;
   height: 48px;
-  border: 1px solid var(--line);
+  border: 1px solid rgb(255 255 255 / 0.24);
   border-radius: 999px;
-  background: var(--white);
-  color: var(--ink);
+  background: rgb(255 255 255 / 0.06);
+  color: var(--white);
 }
 
 .menu-toggle span {
@@ -342,8 +349,14 @@ p {
   min-height: calc(100vh - 76px);
   margin-top: -76px;
   padding: 8.5rem clamp(1.3rem, 3vw, 3rem) 4.25rem;
-  border-radius: 0 0 var(--radius) var(--radius);
   overflow: hidden;
+}
+
+.hero {
+  width: 100%;
+  max-width: none;
+  padding-inline: max(1rem, calc((100% - var(--max)) / 2));
+  border-radius: 0;
 }
 
 .section-dark {
@@ -538,9 +551,9 @@ p {
 .hero-main-mascot {
   position: absolute;
   z-index: 3;
-  left: clamp(-1.2rem, -1vw, 0rem);
+  left: clamp(-2.2rem, -2vw, -0.4rem);
   bottom: clamp(-0.8rem, 0.4vw, 0.3rem);
-  width: clamp(180px, 16vw, 230px) !important;
+  width: clamp(260px, 24vw, 350px) !important;
   height: auto !important;
   max-height: none !important;
   aspect-ratio: auto !important;
@@ -1603,6 +1616,8 @@ p {
   width: 100%;
   max-width: none;
   margin-top: clamp(1rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 0.72fr) minmax(340px, 0.9fr) minmax(190px, 0.42fr);
+  align-items: end;
   padding:
     clamp(5.6rem, 8vw, 7.2rem)
     max(1rem, calc((100% - var(--max)) / 2))
@@ -1640,6 +1655,28 @@ p {
   pointer-events: none;
 }
 
+.lead-peeking-mascot {
+  display: none;
+}
+
+.home-flow > .lead-section .lead-peeking-mascot {
+  display: block;
+  grid-column: 3;
+  grid-row: 1;
+  align-self: end;
+  justify-self: end;
+  width: clamp(210px, 21vw, 330px);
+  aspect-ratio: 1536 / 1024;
+  height: auto;
+  max-width: none;
+  margin: 0 -2.8rem -5.8rem 0;
+  transform: translateX(1.25rem);
+  filter: drop-shadow(0 22px 26px rgb(20 20 22 / 0.22));
+  pointer-events: none;
+  position: relative;
+  z-index: 2;
+}
+
 .lead-copy {
   display: grid;
   gap: 1rem;
@@ -1648,7 +1685,7 @@ p {
 .home-flow > .lead-section .lead-copy,
 .home-flow > .lead-section .lead-form {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .home-flow > .lead-section .lead-copy p {
@@ -2241,6 +2278,19 @@ p {
   .direction-rail {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .home-flow > .lead-section {
+    grid-template-columns: 1fr;
+  }
+
+  .home-flow > .lead-section .lead-peeking-mascot {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: end;
+    width: min(48vw, 320px);
+    margin: -1rem 0 -5.3rem;
+    transform: none;
+  }
 }
 
 @media (max-width: 620px) {
@@ -2268,6 +2318,10 @@ p {
   .inner-hero,
   .site-footer {
     width: min(calc(100vw - 1rem), var(--max));
+  }
+
+  .hero {
+    width: 100%;
   }
 
   h1 {
@@ -2399,6 +2453,19 @@ p {
     gap: 1.5rem;
   }
 
+  .home-flow > .lead-section {
+    grid-template-columns: 1fr;
+  }
+
+  .home-flow > .lead-section .lead-peeking-mascot {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: end;
+    width: min(62vw, 300px);
+    margin: -0.8rem 0 -5.2rem;
+    transform: none;
+  }
+
   .audience-section {
     padding-inline: 1rem;
   }
@@ -2421,6 +2488,12 @@ p {
   .home-flow > .lead-section {
     width: 100%;
     padding-inline: 1rem;
+  }
+
+  .home-flow > .lead-section .lead-peeking-mascot {
+    width: min(76vw, 248px);
+    margin: -0.4rem -0.5rem -4.8rem 0;
+    transform: none;
   }
 
   .lead-brand-row {
@@ -2504,6 +2577,592 @@ p {
     scroll-behavior: auto;
   }
 
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+.branches-index {
+  position: relative;
+  padding: 5.2rem 0 4rem;
+  overflow: hidden;
+}
+
+.branches-index-inner,
+.branch-hero .section-inner {
+  position: relative;
+  z-index: 1;
+  width: min(calc(100% - 2rem), var(--max));
+  margin: 0 auto;
+}
+
+.branches-index-copy {
+  display: grid;
+  gap: 1rem;
+  max-width: 760px;
+}
+
+.branches-index-copy h1,
+.branch-hero-copy h1 {
+  color: var(--white);
+}
+
+.branches-index-copy p,
+.branch-hero-copy p {
+  color: oklch(0.86 0.025 245);
+}
+
+.branch-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 0.8rem;
+  align-items: end;
+  margin: 2rem 0 1.2rem;
+  padding: 0.9rem;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.06);
+}
+
+.branch-filters .field span {
+  color: oklch(0.86 0.025 245);
+}
+
+.branch-filters select {
+  border-color: rgb(255 255 255 / 0.18);
+  background: rgb(255 255 255 / 0.1);
+  color: var(--white);
+}
+
+.branch-filters option {
+  color: var(--ink);
+}
+
+.branch-reset {
+  min-width: 9rem;
+  border-color: rgb(255 255 255 / 0.28);
+  color: var(--white);
+}
+
+.branch-map {
+  position: relative;
+  min-height: clamp(360px, 42vw, 560px);
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 35% 50%, rgb(77 114 243 / 0.18), transparent 16rem),
+    linear-gradient(135deg, #101115, #191b21);
+  box-shadow: 0 28px 60px rgb(0 0 0 / 0.24);
+  isolation: isolate;
+}
+
+.branch-map.compact {
+  min-height: 260px;
+  margin-top: 1rem;
+}
+
+.branch-map-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgb(114 146 246 / 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(114 146 246 / 0.3) 1px, transparent 1px);
+  background-size: 62px 62px;
+  transform: rotate(-8deg) scale(1.18);
+}
+
+.branch-map-route {
+  position: absolute;
+  border: 4px solid var(--blue);
+  border-color: var(--blue) transparent transparent transparent;
+  border-radius: 50%;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+.branch-map-route--one {
+  left: 4%;
+  top: 24%;
+  width: 88%;
+  height: 74%;
+  transform: rotate(-9deg);
+}
+
+.branch-map-route--two {
+  left: 18%;
+  top: 8%;
+  width: 58%;
+  height: 70%;
+  transform: rotate(28deg);
+}
+
+.branch-map-route--three {
+  left: -6%;
+  top: 46%;
+  width: 72%;
+  height: 58%;
+  transform: rotate(-18deg);
+}
+
+.branch-marker {
+  position: absolute;
+  z-index: 4;
+  width: 3.15rem;
+  height: 3.15rem;
+  min-height: 0;
+  margin: -1.55rem 0 0 -1.55rem;
+  border: 0;
+  border-radius: 999px 999px 999px 0;
+  background: var(--blue);
+  box-shadow: 0 12px 20px rgb(0 0 0 / 0.28);
+  transform: rotate(-45deg);
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.branch-marker span {
+  position: absolute;
+  inset: 0.85rem;
+  border-radius: 999px;
+  background: var(--white);
+  transform: rotate(45deg);
+}
+
+.branch-marker:hover,
+.branch-marker.is-active {
+  background: var(--karakul);
+  box-shadow: 0 18px 28px rgb(77 114 243 / 0.36);
+  transform: translateY(-0.25rem) rotate(-45deg) scale(1.05);
+}
+
+.branch-map-card {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 0.35rem;
+  width: min(260px, 44vw);
+  padding: 0.8rem;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: var(--radius);
+  background: rgb(20 20 22 / 0.86);
+  color: var(--white);
+  box-shadow: 0 16px 28px rgb(0 0 0 / 0.28);
+}
+
+.branch-map-card span {
+  color: oklch(0.82 0.025 245);
+  font-size: 0.9rem;
+}
+
+.branch-map-card button {
+  width: fit-content;
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--blue);
+  color: var(--white);
+  padding: 0.35rem 0.7rem;
+  font-weight: 760;
+}
+
+.branch-map-mascot {
+  position: absolute;
+  right: clamp(0.8rem, 4vw, 3rem);
+  bottom: -1.8rem;
+  z-index: 2;
+  width: clamp(110px, 18vw, 220px);
+  filter: drop-shadow(0 18px 20px rgb(0 0 0 / 0.32));
+  pointer-events: none;
+}
+
+.branch-results-section,
+.branch-detail-section,
+.branch-gallery-section {
+  width: min(calc(100% - 2rem), var(--max));
+  margin: 0 auto;
+}
+
+.result-count {
+  align-self: end;
+  justify-self: end;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  padding: 0.6rem 0.85rem;
+  font-weight: 760;
+}
+
+.branch-card {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 30px rgb(20 20 22 / 0.08);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.branch-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.35rem;
+  background: var(--blue);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.branch-card:hover,
+.branch-card.is-active {
+  border-color: var(--blue);
+  box-shadow: 0 22px 38px rgb(77 114 243 / 0.16);
+  transform: translateY(-2px);
+}
+
+.branch-card.is-active::before {
+  opacity: 1;
+}
+
+.branch-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.branch-pin {
+  position: relative;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px 999px 999px 0;
+  background: var(--blue);
+  transform: rotate(-45deg);
+}
+
+.branch-pin::after {
+  content: '';
+  position: absolute;
+  inset: 0.45rem;
+  border-radius: 999px;
+  background: var(--white);
+}
+
+.mock-pill,
+.mock-note {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border: 1px solid rgb(77 114 243 / 0.28);
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  padding: 0.32rem 0.58rem;
+  font-size: 0.82rem;
+  font-weight: 760;
+}
+
+.branch-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.branch-card-actions .secondary-button,
+.branch-card-actions .text-button {
+  min-width: 0;
+  min-height: 38px;
+  padding: 0.55rem 0.8rem;
+}
+
+.branch-mini-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.branch-mini-list button {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--milk);
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.branch-mini-list span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.branch-hero {
+  position: relative;
+  padding: 5.2rem 0 4rem;
+  overflow: hidden;
+}
+
+.branch-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+
+.branch-hero-copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.branch-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.branch-facts span {
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: var(--radius);
+  background: rgb(255 255 255 / 0.07);
+  color: var(--white);
+  padding: 0.75rem;
+}
+
+.branch-hero-media {
+  position: relative;
+  min-height: clamp(330px, 37vw, 470px);
+}
+
+.branch-organic,
+.branch-gallery-item {
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  background: var(--blue-soft);
+  box-shadow: 0 18px 34px rgb(0 0 0 / 0.18);
+}
+
+.branch-organic img,
+.branch-gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.branch-organic {
+  position: absolute;
+}
+
+.branch-organic--1 {
+  top: 0;
+  right: 4%;
+  width: 66%;
+  height: 58%;
+  border-radius: 46% 54% 39% 61% / 44% 38% 62% 56%;
+  transform: rotate(2deg);
+}
+
+.branch-organic--2 {
+  left: 0;
+  bottom: 0;
+  width: 58%;
+  height: 48%;
+  border-radius: 62% 38% 52% 48% / 48% 57% 43% 52%;
+  transform: rotate(-3deg);
+}
+
+.branch-direction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.branch-direction-grid .mini-direction {
+  min-height: 132px;
+  border-color: var(--line);
+  background:
+    radial-gradient(circle at 90% 12%, rgb(77 114 243 / 0.18), transparent 6rem),
+    var(--white);
+}
+
+.branch-course-section .program-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.schedule-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 0.65rem 0;
+}
+
+.branch-gallery {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.branch-gallery-item {
+  min-height: 260px;
+}
+
+.branch-gallery-item--1 {
+  border-radius: 42% 58% 54% 46% / 53% 40% 60% 47%;
+}
+
+.branch-gallery-item--2 {
+  border-radius: 58% 42% 43% 57% / 46% 62% 38% 54%;
+  transform: translateY(2rem);
+}
+
+.branch-gallery-item--3 {
+  border-radius: 48% 52% 61% 39% / 40% 52% 48% 60%;
+}
+
+.route-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+  transform: none;
+}
+
+.teacher-grid,
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.teacher-card,
+.review-card {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  padding: 1rem;
+}
+
+.breadcrumbs a {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  border-radius: 999px;
+  color: inherit;
+  padding: 0.2rem 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+
+.footer-links a {
+  border-radius: 999px;
+  padding: 0.35rem 0.45rem;
+  color: oklch(0.86 0.025 245);
+}
+
+@media (max-width: 900px) {
+  .branch-filters,
+  .branch-hero-grid,
+  .branch-gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .branch-reset,
+  .result-count {
+    justify-self: start;
+  }
+
+  .branch-hero-media {
+    min-height: 420px;
+  }
+
+  .branch-gallery-item--2 {
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .branches-index,
+  .branch-hero {
+    padding-top: 4rem;
+  }
+
+  .branch-filters {
+    margin-top: 1.4rem;
+    padding: 0.75rem;
+  }
+
+  .branch-map {
+    min-height: 390px;
+  }
+
+  .branch-map-card {
+    left: 1rem !important;
+    right: 1rem;
+    top: auto !important;
+    bottom: 1rem;
+    width: auto;
+  }
+
+  .branch-map-mascot {
+    width: 112px;
+    bottom: 4.6rem;
+  }
+
+  .branch-card-head,
+  .branch-facts,
+  .schedule-row {
+    grid-template-columns: 1fr;
+  }
+
+  .branch-card-head {
+    gap: 0.5rem;
+  }
+
+  .branch-pin {
+    display: none;
+  }
+
+  .branch-hero-media {
+    min-height: 360px;
+  }
+
+  .branch-organic--1 {
+    right: 0;
+    width: 78%;
+    height: 54%;
+  }
+
+  .branch-organic--2 {
+    width: 72%;
+    height: 47%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {

@@ -63,37 +63,11 @@ export interface Direction {
   faqs: Array<{ question: string; answer: string }>;
 }
 
-export interface Branch {
-  id: string;
-  title: string;
-  district: string;
-  address: string;
-  availability: DirectionSlug[];
-}
-
 export const audienceLabels: Record<Audience, string> = {
   children: 'Детям',
   teens: 'Подросткам',
   adults: 'Взрослым',
 };
-
-const allDirectionSlugs: DirectionSlug[] = [
-  'languages',
-  'school',
-  'exams',
-  'it',
-  'robotics',
-  'ai',
-  'marketing',
-  'design',
-  'business',
-  'communications',
-  'finance',
-  'career',
-  'kids-development',
-  'creative',
-  'driving',
-];
 
 type CourseInput = Omit<Course, 'id' | 'summary' | 'modules'> & {
   modules?: CourseModule[];
@@ -533,30 +507,6 @@ export const allCourses: Course[] = directions.flatMap((item) => item.courses);
 
 export const popularCourses: Course[] = allCourses.filter((item) => item.popular).slice(0, 12);
 
-export const branches: Branch[] = [
-  {
-    id: 'branch-a',
-    title: 'Филиал A',
-    district: 'район требует подтверждения',
-    address: 'адрес требует подтверждения',
-    availability: ['languages', 'school', 'exams', 'creative', 'kids-development'],
-  },
-  {
-    id: 'branch-b',
-    title: 'Филиал B',
-    district: 'район требует подтверждения',
-    address: 'адрес требует подтверждения',
-    availability: ['it', 'robotics', 'ai', 'design', 'marketing', 'business', 'communications', 'finance'],
-  },
-  {
-    id: 'consultation',
-    title: 'Подбор филиала',
-    district: 'поможем выбрать после заявки',
-    address: 'актуальный адрес уточняется менеджером',
-    availability: allDirectionSlugs,
-  },
-];
-
 export const siteMap = [
   { path: '/', label: 'Главная' },
   { path: '/directions', label: 'Все направления' },
@@ -564,7 +514,7 @@ export const siteMap = [
   { path: '/children', label: 'Детям' },
   { path: '/teens', label: 'Подросткам' },
   { path: '/adults', label: 'Взрослым' },
-  { path: '/branches', label: 'Филиалы' },
+  { path: '/filialy', label: 'Филиалы' },
   { path: '/about', label: 'О проекте' },
   { path: '/contacts', label: 'Контакты' },
   ...directions.map((item) => ({

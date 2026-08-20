@@ -1,9 +1,8 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, MouseEvent, useEffect, useMemo, useState } from 'react';
 import {
   Audience,
   allCourses,
   audienceLabels,
-  branches,
   directionPath,
   directions,
   findDirection,
@@ -12,15 +11,15 @@ import {
   programPath,
   siteMap,
 } from './data';
-import type { Branch, Direction, Program } from './data';
+import { branches, findBranch } from './branches.mock';
+import type { Branch } from './branches.mock';
+import type { Direction, Program } from './data';
 
 const navItems = [
   { path: '/directions', label: 'Направления' },
-  { path: '/courses', label: 'Курсы' },
   { path: '/children', label: 'Детям' },
-  { path: '/teens', label: 'Подросткам' },
   { path: '/adults', label: 'Взрослым' },
-  { path: '/branches', label: 'Филиалы' },
+  { path: '/filialy', label: 'Филиалы' },
 ];
 
 const advantageBadges = [
@@ -82,6 +81,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     title: 'Курсы взрослым — Практика',
     description: 'Подборка курсов Практики для взрослых: языки, маркетинг, IT, AI, бизнес, продажи, финансы и творчество.',
   },
+  '/filialy': {
+    title: 'Филиалы — Практика',
+    description: 'Выберите удобный филиал Практики и направление обучения.',
+  },
   '/branches': {
     title: 'Филиалы — Практика',
     description: 'Выберите удобный филиал Практики и направление обучения.',
@@ -109,12 +112,27 @@ function getRoute() {
 }
 
 function cleanPath(route: string) {
-  return route.split('?')[0] || '/';
+  const path = route.split('?')[0] || '/';
+  return path.length > 1 ? path.replace(/\/+$/, '') : path;
 }
 
 function deploymentBase() {
   return window.location.pathname.startsWith('/praktika') ? '/praktika' : '';
 }
+
+function hrefFor(path: string) {
+  return `${deploymentBase()}${path}`;
+}
+
+function branchPath(branch: Branch) {
+  return `/filialy/${branch.slug}`;
+}
+
+function isBranchRoute(parts: string[]) {
+  return (parts[0] === 'filialy' || parts[0] === 'branches') && Boolean(parts[1]);
+}
+
+const activeBranches = branches.filter((branch) => branch.active);
 
 function audienceFromParam(value: string | null): Audience {
   if (value === 'child' || value === 'children') return 'children';
@@ -189,6 +207,15 @@ export default function App() {
 function getMeta(path: string) {
   if (pageMeta[path]) return pageMeta[path];
   const parts = path.split('/').filter(Boolean);
+  if (isBranchRoute(parts)) {
+    const branch = findBranch(parts[1]);
+    if (branch) {
+      return {
+        title: branch.seoTitle,
+        description: branch.seoDescription,
+      };
+    }
+  }
   const directionSlug = parts[0] === 'directions' ? parts[1] : parts[0];
   const direction = directionSlug ? findDirection(directionSlug) : undefined;
   if (direction && parts.length === 1) {
@@ -252,8 +279,14 @@ function renderRoute(args: {
   if (path === '/children' || path === '/teens' || path === '/adults') {
     return <AudiencePage audience={parts[0] as Audience} navigate={navigate} />;
   }
-  if (path === '/branches') {
+  if (path === '/filialy' || path === '/branches') {
     return <BranchesPage navigate={navigate} />;
+  }
+  if (isBranchRoute(parts)) {
+    const branch = findBranch(parts[1]);
+    if (branch) {
+      return <BranchPage branch={branch} navigate={navigate} />;
+    }
   }
   if (path === '/about') {
     return <AboutPage navigate={navigate} />;
@@ -295,11 +328,17 @@ function Header({
   menuOpen: boolean;
   setMenuOpen: (value: boolean) => void;
 }) {
+  const handleNav = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    event.preventDefault();
+    navigate(path);
+  };
+  const isActive = (path: string) => currentPath === path || (path === '/filialy' && currentPath.startsWith('/filialy/'));
+
   return (
     <header className="site-header">
-      <button className="brand-link" type="button" onClick={() => navigate('/')} aria-label="На главную">
+      <a className="brand-link" href={hrefFor('/')} onClick={(event) => handleNav(event, '/')} aria-label="На главную">
         <BrandLogo />
-      </button>
+      </a>
       <button
         className="menu-toggle"
         type="button"
@@ -314,14 +353,14 @@ function Header({
       </button>
       <nav id="main-navigation" className={menuOpen ? 'nav-list is-open' : 'nav-list'} aria-label="Основная навигация">
         {navItems.map((item) => (
-          <button
+          <a
             key={item.label}
-            type="button"
-            className={currentPath === cleanPath(item.path) ? 'nav-link is-active' : 'nav-link'}
-            onClick={() => navigate(item.path)}
+            href={hrefFor(item.path)}
+            className={isActive(item.path) ? 'nav-link is-active' : 'nav-link'}
+            onClick={(event) => handleNav(event, item.path)}
           >
             {item.label}
-          </button>
+          </a>
         ))}
         <button className="header-cta" type="button" onClick={() => navigate('/courses')}>
           Найти курс
@@ -503,7 +542,7 @@ function HomePage({
             В этой версии филиалы показаны как структура выбора. Реальные адреса нужно
             заменить после передачи подтверждённого списка.
           </p>
-          <button className="secondary-button" type="button" onClick={() => navigate('/branches')}>
+          <button className="secondary-button" type="button" onClick={() => navigate('/filialy')}>
             Выбрать филиал
           </button>
         </div>
@@ -511,7 +550,7 @@ function HomePage({
           <figure className="branch-photo">
             <img src="assets/home-reception.webp" alt="Ресепшен и зона ожидания образовательного центра Практика." loading="lazy" />
           </figure>
-          <BranchList compact />
+          <BranchList compact navigate={navigate} />
         </div>
       </section>
 
@@ -866,6 +905,8 @@ function DirectionPage({
   direction: Direction;
   navigate: (path: string) => void;
 }) {
+  const availableBranches = activeBranches.filter((branch) => branch.directionIds.includes(direction.slug));
+
   return (
     <>
       <DirectionHero direction={direction} navigate={navigate} />
@@ -912,13 +953,14 @@ function DirectionPage({
           </p>
         </InfoPanel>
         <InfoPanel title="Филиалы направления">
-          <ul>
-            {branches
-              .filter((branch) => branch.availability.includes(direction.slug))
-              .map((branch) => (
-                <li key={branch.id}>{branch.title}: {branch.address}</li>
-              ))}
-          </ul>
+          <div className="branch-mini-list">
+            {availableBranches.map((branch) => (
+              <button key={branch.id} type="button" onClick={() => navigate(branchPath(branch))}>
+                <strong>{branch.shortName}</strong>
+                <span>{branch.city} · {branch.district}</span>
+              </button>
+            ))}
+          </div>
         </InfoPanel>
         <InfoPanel title="Отзывы">
           <p>Блок предусмотрен, но реальные отзывы не выдуманы.</p>
@@ -999,36 +1041,333 @@ function ProgramPage({
   );
 }
 
+function branchDirections(branch: Branch) {
+  return directions.filter((direction) => branch.directionIds.includes(direction.slug));
+}
+
+function branchCourses(branch: Branch) {
+  return branch.courseIds
+    .map((slug) => allCourses.find((course) => course.slug === slug))
+    .filter((course): course is Program => Boolean(course));
+}
+
+function uniqueValues(values: string[]) {
+  return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, 'ru'));
+}
+
 function BranchesPage({ navigate }: { navigate: (path: string) => void }) {
-  const [selectedDirection, setSelectedDirection] = useState<Direction['slug']>('languages');
-  const available = branches.filter((branch) => branch.availability.includes(selectedDirection));
+  const initialParams = new URLSearchParams(window.location.search);
+  const [selectedCity, setSelectedCity] = useState(initialParams.get('city') ?? '');
+  const [selectedDistrict, setSelectedDistrict] = useState(initialParams.get('district') ?? '');
+  const [selectedDirection, setSelectedDirection] = useState<Direction['slug'] | ''>(
+    (initialParams.get('direction') as Direction['slug'] | null) ?? '',
+  );
+
+  const cityOptions = useMemo(() => uniqueValues(activeBranches.map((branch) => branch.city)), []);
+  const districtOptions = useMemo(() => {
+    const source = selectedCity ? activeBranches.filter((branch) => branch.city === selectedCity) : activeBranches;
+    return uniqueValues(source.map((branch) => branch.district));
+  }, [selectedCity]);
+
+  useEffect(() => {
+    if (selectedDistrict && !districtOptions.includes(selectedDistrict)) {
+      setSelectedDistrict('');
+    }
+  }, [districtOptions, selectedDistrict]);
+
+  const filteredBranches = useMemo(
+    () =>
+      activeBranches.filter((branch) => {
+        const cityMatch = selectedCity ? branch.city === selectedCity : true;
+        const districtMatch = selectedDistrict ? branch.district === selectedDistrict : true;
+        const directionMatch = selectedDirection ? branch.directionIds.includes(selectedDirection) : true;
+        return cityMatch && districtMatch && directionMatch;
+      }),
+    [selectedCity, selectedDistrict, selectedDirection],
+  );
+
+  const [activeBranchId, setActiveBranchId] = useState(filteredBranches[0]?.id ?? '');
+
+  useEffect(() => {
+    if (!filteredBranches.some((branch) => branch.id === activeBranchId)) {
+      setActiveBranchId(filteredBranches[0]?.id ?? '');
+    }
+  }, [activeBranchId, filteredBranches]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (selectedCity) params.set('city', selectedCity);
+    if (selectedDistrict) params.set('district', selectedDistrict);
+    if (selectedDirection) params.set('direction', selectedDirection);
+    const query = params.toString();
+    const nextUrl = `${deploymentBase()}/filialy${query ? `?${query}` : ''}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, [selectedCity, selectedDistrict, selectedDirection]);
+
+  const resetFilters = () => {
+    setSelectedCity('');
+    setSelectedDistrict('');
+    setSelectedDirection('');
+  };
 
   return (
-    <InnerPage
-      title="Филиалы"
-      intro="Выбор филиала уже заложен в сценарий заявки. Реальные адреса и районы нужно заменить после подтверждения."
-    >
-      <div className="filters-row">
-        <label className="field compact-field">
-          <span>Направление</span>
-          <select value={selectedDirection} onChange={(event) => setSelectedDirection(event.target.value as Direction['slug'])}>
-            {directions.map((direction) => (
-              <option key={direction.slug} value={direction.slug}>
-                {direction.title}
-              </option>
+    <>
+      <section className="branches-index section-dark">
+        <div className="section-inner branches-index-inner">
+          <Breadcrumbs
+            dark
+            items={[
+              { label: 'Главная', path: '/' },
+              { label: 'Филиалы' },
+            ]}
+            navigate={navigate}
+          />
+          <div className="branches-index-copy">
+            <span className="eyebrow">Все филиалы</span>
+            <h1>Филиалы рядом</h1>
+            <p>
+              Выберите город, район и направление. Сейчас показаны демонстрационные точки: реальные адреса, телефоны и
+              расписание нужно добавить после подтверждения.
+            </p>
+          </div>
+          <div className="branch-filters" aria-label="Фильтры филиалов">
+            <label className="field compact-field">
+              <span>Город</span>
+              <select value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
+                <option value="">Любой</option>
+                {cityOptions.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field compact-field">
+              <span>Район</span>
+              <select value={selectedDistrict} onChange={(event) => setSelectedDistrict(event.target.value)}>
+                <option value="">Любой</option>
+                {districtOptions.map((district) => (
+                  <option key={district} value={district}>
+                    {district}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field compact-field">
+              <span>Направление</span>
+              <select value={selectedDirection} onChange={(event) => setSelectedDirection(event.target.value as Direction['slug'] | '')}>
+                <option value="">Любое</option>
+                {directions.map((direction) => (
+                  <option key={direction.slug} value={direction.slug}>
+                    {direction.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="secondary-button branch-reset" type="button" onClick={resetFilters}>
+              Сбросить
+            </button>
+          </div>
+          <BranchMap
+            branches={filteredBranches}
+            activeBranchId={activeBranchId}
+            onActivate={setActiveBranchId}
+            navigate={navigate}
+          />
+        </div>
+      </section>
+      <section className="section branch-results-section">
+        <div className="section-heading split-heading">
+          <div>
+            <h2>Филиалы</h2>
+            <p>Карточки синхронизированы с маркерами на карте-схеме.</p>
+          </div>
+          <span className="result-count">{filteredBranches.length} из {activeBranches.length}</span>
+        </div>
+        {filteredBranches.length ? (
+          <BranchList branches={filteredBranches} navigate={navigate} activeBranchId={activeBranchId} onActivate={setActiveBranchId} />
+        ) : (
+          <div className="empty-state">
+            По выбранным фильтрам филиалов нет. Сбросьте фильтры или выберите другое направление.
+          </div>
+        )}
+      </section>
+      <LeadSection />
+    </>
+  );
+}
+
+function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: string) => void }) {
+  const directionsInBranch = branchDirections(branch);
+  const coursesInBranch = branchCourses(branch);
+  const scrollToLead = () => document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth' });
+
+  return (
+    <>
+      <section className="branch-hero section-dark">
+        <div className="section-inner">
+          <Breadcrumbs
+            dark
+            items={[
+              { label: 'Главная', path: '/' },
+              { label: 'Филиалы', path: '/filialy' },
+              { label: branch.shortName },
+            ]}
+            navigate={navigate}
+          />
+          <div className="branch-hero-grid">
+            <div className="branch-hero-copy">
+              <span className="eyebrow">Страница филиала</span>
+              <h1>{branch.name}</h1>
+              <p>{branch.fullDescription}</p>
+              {branch.mock ? <span className="mock-note">Демо-данные: заменить после подтверждения</span> : null}
+              <div className="branch-facts">
+                <span>{branch.address}</span>
+                <span>{branch.nearestMetro}</span>
+                <span>{branch.workingHours}</span>
+                <span>{branch.ageGroups.join(' · ')}</span>
+              </div>
+              <div className="hero-actions">
+                <button className="primary-button" type="button" onClick={scrollToLead}>
+                  Записаться
+                </button>
+                {branch.routeUrl ? (
+                  <a className="secondary-button route-link" href={branch.routeUrl} target="_blank" rel="noreferrer">
+                    Построить маршрут
+                  </a>
+                ) : (
+                  <button className="secondary-button" type="button" disabled>
+                    Маршрут после подтверждения
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="branch-hero-media" aria-label="Фото филиала">
+              {branch.heroImages.map((image, index) => (
+                <figure className={`branch-organic branch-organic--${index + 1}`} key={image.src}>
+                  <img src={image.src} alt={image.alt} loading={index === 0 ? 'eager' : 'lazy'} />
+                </figure>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section branch-detail-section">
+        <div className="section-heading split-heading">
+          <div>
+            <h2>Направления</h2>
+            <p>Направления берутся из общей структуры сайта и фильтруются по этому филиалу.</p>
+          </div>
+          <button className="text-button" type="button" onClick={() => navigate('/directions')}>
+            Смотреть все
+          </button>
+        </div>
+        <div className="branch-direction-grid">
+          {directionsInBranch.map((direction) => (
+            <MiniDirection key={direction.slug} direction={direction} navigate={navigate} />
+          ))}
+        </div>
+      </section>
+
+      <section className="section branch-detail-section branch-course-section">
+        <div className="section-heading">
+          <h2>Курсы в филиале</h2>
+          <p>Это демонстрационная выборка из общего каталога. Точный набор программ нужно подтвердить.</p>
+        </div>
+        <div className="program-grid">
+          {coursesInBranch.map((program) => (
+            <ProgramCard
+              key={program.id}
+              direction={findDirection(program.directionId) ?? directions[0]}
+              program={program}
+              navigate={navigate}
+            />
+          ))}
+        </div>
+      </section>
+
+      {branch.teachers.length ? (
+        <section className="section branch-detail-section">
+          <div className="section-heading">
+            <h2>Преподаватели</h2>
+            <p>Блок появится только после передачи подтверждённых карточек преподавателей.</p>
+          </div>
+          <div className="teacher-grid">
+            {branch.teachers.map((teacher) => (
+              <article className="teacher-card" key={teacher.id}>
+                {teacher.photo ? <img src={teacher.photo} alt={teacher.name} loading="lazy" /> : null}
+                <h3>{teacher.name}</h3>
+                <p>{teacher.specialization}</p>
+                <span>{teacher.experience}</span>
+              </article>
             ))}
-          </select>
-        </label>
-      </div>
-      <div className="branch-grid">
-        {available.map((branch) => (
-          <BranchCard key={branch.id} branch={branch} />
-        ))}
-      </div>
-      <button className="primary-button" type="button" onClick={() => navigate('/contacts')}>
-        Оставить заявку
-      </button>
-    </InnerPage>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="section branch-detail-section">
+        <div className="detail-grid-section">
+          <InfoPanel title="Расписание">
+            {branch.schedule.length ? (
+              <div className="schedule-list">
+                {branch.schedule.map((item) => {
+                  const direction = findDirection(item.directionId);
+                  return (
+                    <div className="schedule-row" key={item.id}>
+                      <strong>{item.time}</strong>
+                      <span>{direction?.shortTitle ?? item.directionId}</span>
+                      <span>{item.ageGroup}</span>
+                      <span>{item.seatsStatus}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">Ближайшие даты и группы нужно добавить после подтверждения расписания.</div>
+            )}
+          </InfoPanel>
+          <InfoPanel title="Как добраться">
+            <p>{branch.address}</p>
+            <p>{branch.travelTime}</p>
+            <BranchMap branches={[branch]} activeBranchId={branch.id} onActivate={() => undefined} navigate={navigate} compact />
+          </InfoPanel>
+        </div>
+      </section>
+
+      <section className="section branch-gallery-section">
+        <div className="section-heading">
+          <h2>Пространство филиала</h2>
+          <p>Фото используются из материалов, переданных для проекта.</p>
+        </div>
+        <div className="branch-gallery">
+          {branch.galleryImages.map((image, index) => (
+            <figure className={`branch-gallery-item branch-gallery-item--${index + 1}`} key={`${image.src}-${index}`}>
+              <img src={image.src} alt={image.alt} loading="lazy" />
+            </figure>
+          ))}
+        </div>
+      </section>
+
+      {branch.reviews.length ? (
+        <section className="section branch-detail-section">
+          <div className="section-heading">
+            <h2>Отзывы</h2>
+          </div>
+          <div className="review-grid">
+            {branch.reviews.map((review) => (
+              <article className="review-card" key={review.id}>
+                <strong>{review.author}</strong>
+                <p>{review.text}</p>
+                <span>{review.context}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <LeadSection selectedBranch={branch} />
+    </>
   );
 }
 
@@ -1236,23 +1575,133 @@ function ProgramCard({
   );
 }
 
-function BranchList({ compact }: { compact?: boolean }) {
+function BranchList({
+  branches: items = activeBranches,
+  compact,
+  navigate,
+  activeBranchId,
+  onActivate,
+}: {
+  branches?: Branch[];
+  compact?: boolean;
+  navigate: (path: string) => void;
+  activeBranchId?: string;
+  onActivate?: (id: string) => void;
+}) {
   return (
     <div className={compact ? 'branch-list compact' : 'branch-list'}>
-      {branches.map((branch) => (
-        <BranchCard key={branch.id} branch={branch} />
+      {items.map((branch) => (
+        <BranchCard
+          key={branch.id}
+          branch={branch}
+          navigate={navigate}
+          active={activeBranchId === branch.id}
+          onActivate={onActivate}
+        />
       ))}
     </div>
   );
 }
 
-function BranchCard({ branch }: { branch: Branch }) {
+function BranchCard({
+  branch,
+  navigate,
+  active,
+  onActivate,
+}: {
+  branch: Branch;
+  navigate: (path: string) => void;
+  active?: boolean;
+  onActivate?: (id: string) => void;
+}) {
+  const directionsText = branchDirections(branch)
+    .slice(0, 4)
+    .map((direction) => direction.shortTitle)
+    .join(' · ');
+
   return (
-    <article className="branch-card">
-      <h3>{branch.title}</h3>
-      <p>{branch.district}</p>
+    <article className={active ? 'branch-card is-active' : 'branch-card'} id={`branch-${branch.id}`}>
+      <div className="branch-card-head">
+        <span className="branch-pin" aria-hidden="true" />
+        <div>
+          <h3>{branch.shortName}</h3>
+          <p>{branch.city} · {branch.district}</p>
+        </div>
+        {branch.mock ? <span className="mock-pill">демо</span> : null}
+      </div>
       <strong>{branch.address}</strong>
+      <p>{directionsText}</p>
+      <div className="branch-card-actions">
+        {onActivate ? (
+          <button className="secondary-button" type="button" onClick={() => onActivate(branch.id)}>
+            На карте
+          </button>
+        ) : null}
+        <button className="text-button" type="button" onClick={() => navigate(branchPath(branch))}>
+          Выбрать филиал
+        </button>
+      </div>
     </article>
+  );
+}
+
+function BranchMap({
+  branches: items,
+  activeBranchId,
+  onActivate,
+  navigate,
+  compact,
+}: {
+  branches: Branch[];
+  activeBranchId: string;
+  onActivate: (id: string) => void;
+  navigate: (path: string) => void;
+  compact?: boolean;
+}) {
+  const activeBranch = items.find((branch) => branch.id === activeBranchId) ?? items[0];
+
+  const activate = (branch: Branch) => {
+    onActivate(branch.id);
+    window.setTimeout(() => {
+      document.getElementById(`branch-${branch.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 0);
+  };
+
+  return (
+    <div className={compact ? 'branch-map compact' : 'branch-map'} aria-label="Карта филиалов Практики">
+      <div className="branch-map-grid" aria-hidden="true" />
+      <div className="branch-map-route branch-map-route--one" aria-hidden="true" />
+      <div className="branch-map-route branch-map-route--two" aria-hidden="true" />
+      <div className="branch-map-route branch-map-route--three" aria-hidden="true" />
+      {items.map((branch) => (
+        <button
+          className={activeBranch?.id === branch.id ? 'branch-marker is-active' : 'branch-marker'}
+          key={branch.id}
+          type="button"
+          style={{ left: `${branch.mapPosition.x}%`, top: `${branch.mapPosition.y}%` }}
+          aria-label={`Показать филиал ${branch.shortName}`}
+          onClick={() => activate(branch)}
+        >
+          <span />
+        </button>
+      ))}
+      {activeBranch ? (
+        <div
+          className="branch-map-card"
+          style={{
+            left: `min(${activeBranch.mapPosition.x + 4}%, 72%)`,
+            top: `min(${activeBranch.mapPosition.y + 4}%, 72%)`,
+          }}
+        >
+          <strong>{activeBranch.shortName}</strong>
+          <span>{activeBranch.district}</span>
+          <button type="button" onClick={() => navigate(branchPath(activeBranch))}>
+            Открыть страницу
+          </button>
+        </div>
+      ) : null}
+      <img className="branch-map-mascot" src="assets/mascot-main.png" alt="" />
+    </div>
   );
 }
 
@@ -1285,24 +1734,33 @@ function FAQ({ items }: { items: Array<{ question: string; answer: string }> }) 
 function LeadSection({
   selectedDirection,
   selectedProgram,
+  selectedBranch,
 }: {
   selectedDirection?: Direction;
   selectedProgram?: Program;
+  selectedBranch?: Branch;
 }) {
   return (
     <section className="section lead-section" id="lead">
+      <img
+        className="lead-peeking-mascot"
+        src="assets/mascot-footer-peeking.png"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        width="1536"
+        height="1024"
+      />
       <div className="lead-copy">
-        <h2>Записаться на пробное занятие или консультацию</h2>
+        <h2>Пора попробовать</h2>
         <p>
-          Форма локальная: она показывает успешную отправку на сайте и собирает поля,
-          которые позже можно передать в amoCRM.
+          Подберём направление, аудиторию и удобный филиал для первого занятия.
         </p>
         <div className="lead-brand-row" aria-hidden="true">
           <BrandLogo />
-          <img src="assets/mascot-main.png" alt="" />
         </div>
       </div>
-      <LeadForm selectedDirection={selectedDirection} selectedProgram={selectedProgram} />
+      <LeadForm selectedDirection={selectedDirection} selectedProgram={selectedProgram} selectedBranch={selectedBranch} />
     </section>
   );
 }
@@ -1310,14 +1768,23 @@ function LeadSection({
 function LeadForm({
   selectedDirection,
   selectedProgram,
+  selectedBranch,
 }: {
   selectedDirection?: Direction;
   selectedProgram?: Program;
+  selectedBranch?: Branch;
 }) {
   const [submitted, setSubmitted] = useState(false);
   const [directionSlug, setDirectionSlug] = useState(selectedDirection?.slug ?? directions[0].slug);
-  const [branchId, setBranchId] = useState(branches[0].id);
+  const [branchId, setBranchId] = useState(selectedBranch?.id ?? activeBranches[0]?.id ?? '');
   const tracking = useMemo(trackingFields, []);
+  const currentBranch = activeBranches.find((branch) => branch.id === branchId);
+
+  useEffect(() => {
+    if (selectedBranch) {
+      setBranchId(selectedBranch.id);
+    }
+  }, [selectedBranch]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1360,9 +1827,9 @@ function LeadForm({
       <label className="field">
         <span>Удобный филиал</span>
         <select name="branch" value={branchId} onChange={(event) => setBranchId(event.target.value)}>
-          {branches.map((branch) => (
+          {activeBranches.map((branch) => (
             <option key={branch.id} value={branch.id}>
-              {branch.title}
+              {branch.name}
             </option>
           ))}
         </select>
@@ -1377,6 +1844,7 @@ function LeadForm({
       <input type="hidden" name="pageUrl" value={window.location.href} />
       <input type="hidden" name="referer" value={document.referrer} />
       <input type="hidden" name="program" value={selectedProgram?.title ?? ''} />
+      <input type="hidden" name="branchName" value={currentBranch?.name ?? ''} />
       <button className="primary-button" type="submit">
         Отправить заявку
       </button>
@@ -1429,14 +1897,19 @@ function Breadcrumbs({
   navigate: (path: string) => void;
   dark?: boolean;
 }) {
+  const handleLink = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    event.preventDefault();
+    navigate(path);
+  };
+
   return (
     <nav className={dark ? 'breadcrumbs dark' : 'breadcrumbs'} aria-label="Хлебные крошки">
       {items.map((item, index) => (
         <span key={`${item.label}-${index}`}>
           {item.path ? (
-            <button type="button" onClick={() => navigate(item.path!)}>
+            <a href={hrefFor(item.path)} onClick={(event) => handleLink(event, item.path!)}>
               {item.label}
-            </button>
+            </a>
           ) : (
             item.label
           )}
@@ -1447,19 +1920,24 @@ function Breadcrumbs({
 }
 
 function Footer({ navigate }: { navigate: (path: string) => void }) {
+  const handleLink = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
+    event.preventDefault();
+    navigate(path);
+  };
+
   return (
     <footer className="site-footer">
       <div>
-        <button className="brand-link footer-brand" type="button" onClick={() => navigate('/')}>
+        <a className="brand-link footer-brand" href={hrefFor('/')} onClick={(event) => handleLink(event, '/')}>
           <BrandLogo />
-        </button>
+        </a>
         <p>Офлайн-образование через действие для детей и взрослых.</p>
       </div>
       <div className="footer-links">
-        {siteMap.slice(0, 5).map((item) => (
-          <button key={item.path} type="button" onClick={() => navigate(item.path)}>
+        {navItems.map((item) => (
+          <a key={item.path} href={hrefFor(item.path)} onClick={(event) => handleLink(event, item.path)}>
             {item.label}
-          </button>
+          </a>
         ))}
       </div>
       <div className="footer-note">
