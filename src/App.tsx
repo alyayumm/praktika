@@ -267,8 +267,8 @@ function HomePage({
             <AudienceSwitch audience={audience} onChange={setAudience} />
           </div>
         </div>
-        <div className="hero-visual" aria-hidden="true">
-          <img src="assets/hero-praktika.png" alt="" />
+        <div className="hero-visual hero-visual--mascot" aria-hidden="true">
+          <img src="assets/mascot-main.png" alt="" />
         </div>
       </section>
 

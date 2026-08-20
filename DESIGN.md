@@ -2,32 +2,28 @@
 
 ## Theme
 
-Energetic offline education brand with a dark graphite first viewport and cold, bright downstream surfaces. The style is practical, lively, and slightly bold: large type, asymmetry, rounded controls, scribble-like blue motion marks, and organic media frames.
+Energetic offline education brand following the 2026 brandbook: graphite contrast, bright Praktika blue, cold white surfaces, simple rounded geometry, hand-drawn "karakulya" marks, and a blue mascot as the main emotional asset. The site should feel practical, lively, and a little bold without becoming childish or chaotic.
 
 ## Color Tokens
 
 ```css
 :root {
-  --color-graphite: oklch(0.145 0.018 242);
-  --color-graphite-2: oklch(0.205 0.028 244);
-  --color-blue: oklch(0.56 0.205 260);
-  --color-blue-dark: oklch(0.46 0.19 259);
-  --color-blue-soft: oklch(0.9 0.055 245);
-  --color-ice: oklch(0.972 0.006 145);
-  --color-milk: oklch(0.955 0.004 145);
-  --color-surface: oklch(1 0 0);
-  --color-ink: oklch(0.18 0.02 242);
-  --color-muted: oklch(0.47 0.024 242);
-  --color-line: oklch(0.86 0.02 245);
+  --color-graphite: #141416;
+  --color-blue: #4d72f3;
+  --color-karakul: #7292f6;
+  --color-cold-white: #ebeceb;
+  --color-surface: #ffffff;
+  --color-ink: #141416;
 }
 ```
 
-The random Impeccable palette seed suggested a pink-red hue, but the project brief explicitly forbids red/pink/purple/lime accents without approval. Blue Regatta remains the primary brand accent.
+Do not add warm beige, red, pink, purple, lime, or unrelated accent palettes without approval. Blue remains the primary action and system color.
 
 ## Typography
 
-- Display: `Unbounded Variable`, loaded locally via npm package.
-- Body and UI: `Manrope Variable`, loaded locally via npm package.
+- Brandbook display: `Nimbus Sans Narrow Bold`.
+- Brandbook body/UI: `Nimbus Sans Regular`.
+- Until official Nimbus webfont files are provided, CSS uses Nimbus family names first, then a local/system fallback stack. Do not restore `Unbounded` as the display font.
 - H1/H2 use large contrast and balanced wrapping.
 - Body copy stays below 75 characters where possible.
 
@@ -43,7 +39,7 @@ The random Impeccable palette seed suggested a pink-red hue, but the project bri
 
 ## Layout
 
-- First viewport: dark graphite, brand mark, nav, large headline, short explanation, CTA, audience switcher, and an expressive graphic asset.
+- First viewport: dark graphite, brand mark, nav, large headline, short explanation, CTA, audience switcher, and the blue mascot from the brandbook.
 - Main page rhythm: cold light bands, asymmetric sections, compact cards, no repeated generic bento system.
 - Direction pages: breadcrumbs, own hero, program catalog, learning outcomes, format/cost caveat, teachers/branches/reviews sections with "requires confirmation" states.
 

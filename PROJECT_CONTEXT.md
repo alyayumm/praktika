@@ -11,7 +11,7 @@ The requested project is a React + Vite + TypeScript website for the educational
 - Repository: `https://github.com/alyayumm/praktika.git`.
 - Local checkout: `C:\Users\HR\Documents\джугл табл\praktika`.
 - The repository was empty at the start of implementation.
-- No approved visual mockup image or real photo assets were present in the DOCX or repository.
+- The user later provided a 2026 brandbook image in chat. It defines the approved logo, mascot, direction icon style, colors, and typography direction.
 
 ## Scope For This Iteration
 
@@ -31,4 +31,4 @@ Unknown business data is not invented. Prices, addresses, teacher names, reviews
 
 - Do not invent real teachers, prices, reviews, branch addresses, legal data, phone numbers, Telegram/WhatsApp links, CRM integrations, or result guarantees.
 - Do not add warm beige, red, pink, purple, lime, or unrelated accent palettes without approval.
-- Replace temporary graphic assets with approved photos and brand graphics when they become available.
+- Use the provided brandbook and chat images as approved brand graphics. Replace temporary graphic assets with official SVG/font files when they become available.
