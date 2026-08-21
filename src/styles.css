@@ -3717,6 +3717,186 @@ p {
   }
 }
 
+/* Visual pass: align the homepage hero closer to the approved mockups. */
+.hero-visual--reference {
+  min-height: clamp(500px, 46vw, 620px);
+  max-width: 660px;
+  justify-self: end;
+}
+
+.hero-main-mascot {
+  display: none !important;
+}
+
+.hero-visual--reference::before {
+  left: clamp(-2rem, -3vw, -0.75rem);
+  bottom: clamp(2.2rem, 7vw, 5rem);
+  width: clamp(17rem, 31vw, 26rem);
+  height: clamp(7.5rem, 14vw, 11rem);
+  border-width: clamp(10px, 1.3vw, 16px);
+  border-color: rgb(77 114 243 / 0.86);
+  transform: rotate(-18deg);
+}
+
+.hero-visual--reference::after {
+  right: clamp(-3rem, -4vw, -1rem);
+  top: clamp(2rem, 6vw, 5rem);
+  width: clamp(16rem, 29vw, 24rem);
+  height: clamp(7rem, 13vw, 10rem);
+  border-width: clamp(10px, 1.3vw, 16px);
+  border-color: rgb(77 114 243 / 0.78);
+  transform: rotate(26deg);
+}
+
+.hero-bubble {
+  width: clamp(168px, 14.5vw, 236px);
+  gap: 0.55rem;
+}
+
+.hero-bubble img {
+  height: clamp(118px, 10.6vw, 172px) !important;
+  border: 1px solid rgb(255 255 255 / 0.18) !important;
+  clip-path: polygon(10% 20%, 36% 2%, 74% 7%, 98% 35%, 91% 75%, 62% 98%, 22% 91%, 0 58%);
+  box-shadow: 0 22px 42px rgb(0 0 0 / 0.34);
+}
+
+.hero-bubble--robotics {
+  top: clamp(1rem, 2.5vw, 2.4rem);
+  right: clamp(8rem, 13vw, 12rem);
+}
+
+.hero-bubble--driving {
+  top: clamp(12.6rem, 16.4vw, 15.8rem);
+  right: clamp(0rem, 1.2vw, 1rem);
+}
+
+.hero-bubble--english {
+  right: clamp(8rem, 12vw, 11rem);
+  bottom: clamp(2.8rem, 5.4vw, 5.4rem);
+}
+
+.hero-bubble figcaption {
+  max-width: 12rem;
+  font-size: clamp(0.9rem, 1vw, 1rem);
+  color: rgb(154 179 255);
+}
+
+.hero-bubble--robotics figcaption,
+.hero-bubble--english figcaption {
+  margin-left: 0.4rem;
+}
+
+.branch-map-mascot {
+  width: clamp(150px, 22vw, 260px);
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: -1.2rem;
+}
+
+@media (max-width: 900px) {
+  .hero-visual--reference {
+    min-height: clamp(390px, 64vw, 560px);
+    max-width: 100%;
+    justify-self: stretch;
+  }
+
+  .hero-bubble {
+    width: clamp(136px, 27vw, 200px);
+  }
+
+  .hero-bubble img {
+    height: clamp(102px, 20vw, 150px) !important;
+  }
+
+  .hero-bubble--robotics {
+    top: 0;
+    right: 8%;
+  }
+
+  .hero-bubble--driving {
+    top: 34%;
+    right: 0;
+  }
+
+  .hero-bubble--english {
+    right: 19%;
+    bottom: 0.6rem;
+  }
+}
+
+@media (max-width: 620px) {
+  .hero {
+    padding-bottom: 3.5rem;
+  }
+
+  .hero-visual--reference {
+    min-height: 420px;
+    margin-top: 0.4rem;
+  }
+
+  .hero-visual--reference::before {
+    left: -4rem;
+    bottom: 3.2rem;
+    width: 18rem;
+    height: 7.8rem;
+  }
+
+  .hero-visual--reference::after {
+    right: -4.8rem;
+    top: 3.8rem;
+    width: 17rem;
+    height: 8rem;
+  }
+
+  .hero-bubble {
+    width: min(46vw, 176px);
+  }
+
+  .hero-bubble img {
+    height: min(32vw, 126px) !important;
+  }
+
+  .hero-bubble figcaption {
+    max-width: 8.2rem;
+    font-size: 0.78rem;
+  }
+
+  .hero-bubble--robotics {
+    top: 0;
+    right: 5%;
+  }
+
+  .hero-bubble--driving {
+    top: 9.8rem;
+    right: 0;
+  }
+
+  .hero-bubble--english {
+    right: 16%;
+    bottom: 0.2rem;
+  }
+
+  .direction-rail {
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+    contain: none;
+    gap: 0.8rem;
+  }
+
+  .direction-card.compact {
+    min-width: 0;
+    min-height: 170px;
+  }
+}
+
+@media (max-width: 380px) {
+  .direction-rail {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-bubble img,
   .audience-stage-card img {

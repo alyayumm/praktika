@@ -456,7 +456,6 @@ function HomePage({
           </div>
         </div>
         <div className="hero-visual hero-visual--reference" aria-hidden="true">
-          <img className="hero-main-mascot" src="assets/mascot-main.png" alt="" />
           <figure className="hero-bubble hero-bubble--robotics">
             <img src="assets/home-robotics.webp" alt="" />
             <figcaption>Робототехника для детей</figcaption>
@@ -489,7 +488,7 @@ function HomePage({
           </button>
         </div>
         <DirectionRail directions={featuredDirections} navigate={navigate} />
-        <img className="directions-peek-mascot" src="assets/mascot-main.png" alt="" aria-hidden="true" />
+        <img className="directions-peek-mascot" src="assets/mascot-question-pose.png" alt="" aria-hidden="true" />
       </section>
 
       <section className="section audience-section">
@@ -1692,7 +1691,7 @@ function BranchMap({
           </button>
         </div>
       ) : null}
-      <img className="branch-map-mascot" src="assets/mascot-main.png" alt="" />
+      <img className="branch-map-mascot" src="assets/mascot-chin-on-paws.png" alt="" />
     </div>
   );
 }
