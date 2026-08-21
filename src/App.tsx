@@ -1,4 +1,4 @@
-import { FormEvent, MouseEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Audience,
   allCourses,
@@ -22,38 +22,45 @@ const navItems = [
   { path: '/filialy', label: 'Филиалы' },
 ];
 
-const advantageBadges = [
+const methodSteps = [
   {
-    title: 'Обучение через практику',
-    text: 'Пробуем, ошибаемся, разбираем и повторяем.',
-    icon: 'practice',
+    number: '01',
+    title: 'Практика с первого занятия',
+    text: 'Ученик не слушает вводную лекцию, а сразу пробует действие.',
   },
   {
+    number: '02',
     title: 'Небольшие группы',
-    text: 'Преподаватель видит темп и вопросы каждого.',
-    icon: 'group',
+    text: 'Видно темп, вопросы и ошибки каждого ученика.',
   },
   {
-    title: 'Преподаватели-практики',
-    text: 'Занятия строятся вокруг действия и обратной связи.',
-    icon: 'teacher',
+    number: '03',
+    title: 'Рядом с домом',
+    text: 'Занятия в удобном районе, без лишних поездок.',
   },
   {
-    title: 'Для разных возрастов',
-    text: 'От детских групп до взрослых маршрутов обучения.',
-    icon: 'ages',
-  },
-  {
-    title: 'Удобные филиалы',
-    text: 'Можно выбрать направление и ближайшую точку.',
-    icon: 'branch',
-  },
-  {
-    title: 'Первое занятие',
-    text: 'Формат знакомства перед выбором программы.',
-    icon: 'trial',
+    number: '04',
+    title: 'Результат, который видно',
+    text: 'Понятные шаги и заметный прогресс после занятий.',
   },
 ] as const;
+
+type LeadContext = {
+  selectedDirection?: Direction;
+  selectedProgram?: Program;
+  selectedBranch?: Branch;
+  audience?: Audience;
+  source: string;
+};
+
+const homeDirectionLabels: Partial<Record<Direction['slug'], string>> = {
+  languages: 'Языки',
+  driving: 'Автошкола',
+  robotics: 'Робототехника',
+  school: 'Школьные предметы',
+  creative: 'Творчество',
+  it: 'Цифровые навыки',
+};
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/': {
@@ -157,6 +164,7 @@ export default function App() {
     return audienceFromParam(params.get('audience'));
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [leadContext, setLeadContext] = useState<LeadContext | null>(null);
 
   const navigate = (path: string) => {
     const nextUrl = `${deploymentBase()}${path}`;
@@ -165,6 +173,22 @@ export default function App() {
     setMenuOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const updateAudience = (nextAudience: Audience) => {
+    setAudience(nextAudience);
+    const currentPath = cleanPath(getRoute());
+    const params = new URLSearchParams(window.location.search);
+    params.set('audience', nextAudience);
+    const query = params.toString();
+    window.history.replaceState({}, '', `${deploymentBase()}${currentPath}${query ? `?${query}` : ''}`);
+    setRoute(getRoute());
+  };
+
+  const openLead = (context: LeadContext) => {
+    setLeadContext(context);
+  };
+
+  const closeLead = () => setLeadContext(null);
 
   useEffect(() => {
     const onPop = () => setRoute(getRoute());
@@ -195,11 +219,13 @@ export default function App() {
         currentPath={path}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
+        openLead={openLead}
       />
       <main>
-        {renderRoute({ path, navigate, audience, setAudience })}
+        {renderRoute({ path, navigate, audience, setAudience: updateAudience, openLead })}
       </main>
       <Footer navigate={navigate} />
+      {leadContext ? <LeadModal context={leadContext} onClose={closeLead} /> : null}
     </div>
   );
 }
@@ -263,12 +289,13 @@ function renderRoute(args: {
   navigate: (path: string) => void;
   audience: Audience;
   setAudience: (audience: Audience) => void;
+  openLead: (context: LeadContext) => void;
 }) {
-  const { path, navigate, audience, setAudience } = args;
+  const { path, navigate, audience, setAudience, openLead } = args;
   const parts = path.split('/').filter(Boolean);
 
   if (path === '/') {
-    return <HomePage navigate={navigate} audience={audience} setAudience={setAudience} />;
+    return <HomePage navigate={navigate} audience={audience} setAudience={setAudience} openLead={openLead} />;
   }
   if (path === '/directions') {
     return <DirectionsPage navigate={navigate} audience={audience} setAudience={setAudience} />;
@@ -280,12 +307,12 @@ function renderRoute(args: {
     return <AudiencePage audience={parts[0] as Audience} navigate={navigate} />;
   }
   if (path === '/filialy' || path === '/branches') {
-    return <BranchesPage navigate={navigate} />;
+    return <BranchesPage navigate={navigate} openLead={openLead} />;
   }
   if (isBranchRoute(parts)) {
     const branch = findBranch(parts[1]);
     if (branch) {
-      return <BranchPage branch={branch} navigate={navigate} />;
+      return <BranchPage branch={branch} navigate={navigate} openLead={openLead} />;
     }
   }
   if (path === '/about') {
@@ -296,22 +323,22 @@ function renderRoute(args: {
   }
   if (parts[0] === 'directions' && parts[1]) {
     const direction = findDirection(parts[1]);
-    if (direction) return <DirectionPage direction={direction} navigate={navigate} />;
+    if (direction) return <DirectionPage direction={direction} navigate={navigate} openLead={openLead} />;
   }
   if (parts[0] === 'courses' && parts[1]) {
     const { direction, program } = findProgram('courses', parts[1]);
     if (direction && program) {
-      return <ProgramPage direction={direction} program={program} navigate={navigate} />;
+      return <ProgramPage direction={direction} program={program} navigate={navigate} openLead={openLead} />;
     }
   }
   if (parts.length === 1) {
     const direction = findDirection(parts[0]);
-    if (direction) return <DirectionPage direction={direction} navigate={navigate} />;
+    if (direction) return <DirectionPage direction={direction} navigate={navigate} openLead={openLead} />;
   }
   if (parts.length === 2) {
     const { direction, program } = findProgram(parts[0], parts[1]);
     if (direction && program) {
-      return <ProgramPage direction={direction} program={program} navigate={navigate} />;
+      return <ProgramPage direction={direction} program={program} navigate={navigate} openLead={openLead} />;
     }
   }
   return <NotFoundPage navigate={navigate} />;
@@ -322,11 +349,13 @@ function Header({
   currentPath,
   menuOpen,
   setMenuOpen,
+  openLead,
 }: {
   navigate: (path: string) => void;
   currentPath: string;
   menuOpen: boolean;
   setMenuOpen: (value: boolean) => void;
+  openLead: (context: LeadContext) => void;
 }) {
   const handleNav = (event: MouseEvent<HTMLAnchorElement>, path: string) => {
     event.preventDefault();
@@ -362,7 +391,7 @@ function Header({
             {item.label}
           </a>
         ))}
-        <button className="header-cta" type="button" onClick={() => navigate('/courses')}>
+        <button className="header-cta" type="button" onClick={() => openLead({ source: 'header' })}>
           Найти курс
         </button>
       </nav>
@@ -374,12 +403,14 @@ function HomePage({
   navigate,
   audience,
   setAudience,
+  openLead,
 }: {
   navigate: (path: string) => void;
   audience: Audience;
   setAudience: (audience: Audience) => void;
+  openLead: (context: LeadContext) => void;
 }) {
-  const popularPrograms = popularCourses.map((program) => ({
+  const popularPrograms = popularCourses.slice(0, 3).map((program) => ({
     direction: findDirection(program.directionId) ?? directions[0],
     program,
   }));
@@ -406,6 +437,7 @@ function HomePage({
       path: '/adults',
     },
   ];
+  const openHomeLead = (source: string) => openLead({ source, audience });
 
   return (
     <>
@@ -417,7 +449,7 @@ function HomePage({
             робототехника, школьные предметы, творчество и цифровые навыки.
           </p>
           <div className="hero-actions">
-            <button className="primary-button" type="button" onClick={() => navigate('/directions')}>
+            <button className="primary-button" type="button" onClick={() => openHomeLead('home-hero')}>
               Подобрать занятие
             </button>
             <AudienceSwitch audience={audience} onChange={setAudience} />
@@ -448,12 +480,12 @@ function HomePage({
           <div>
             <h2>Куда тянет сегодня?</h2>
             <p>
-              Начните с направления, аудитории или ближайшего филиала. Дальше сайт ведёт
-              на отдельную посадочную страницу курса.
+              Выберите направление и приходите на первое занятие. Каждая плитка ведёт
+              на отдельную страницу с программами.
             </p>
           </div>
           <button className="text-button" type="button" onClick={() => navigate('/directions')}>
-            Полный каталог
+            Все направления
           </button>
         </div>
         <DirectionRail directions={featuredDirections} navigate={navigate} />
@@ -487,29 +519,22 @@ function HomePage({
       <section className="section how-section">
         <div className="section-heading">
           <h2>Не просто слушать — делать</h2>
-          <p>Подвесные бейджи свисают из предыдущего блока и показывают, за счёт чего обучение ощущается живым, понятным и прикладным.</p>
+          <p>Обучение собрано вокруг действий: попробовать, увидеть ошибку, исправить и сделать следующий шаг.</p>
         </div>
-        <BenefitBadges />
-        <div className="story-photo-row story-photo-row--learning">
-          <StoryPhoto
-            src="assets/home-adults-dashboard.webp"
-            alt="Взрослые ученики разбирают учебный материал за ноутбуком в аудитории Практики."
-            caption="Разбор, вопрос, следующий шаг"
-          />
-          <StoryPhoto
-            src="assets/home-kids-certificates.webp"
-            alt="Дети держат сертификаты после занятия в образовательном центре Практика."
-            caption="Первый результат можно держать в руках"
-          />
-        </div>
+        <MethodSteps />
       </section>
 
       <section className="section section-blue popular-section">
-        <div className="section-heading">
-          <h2>Популярные курсы</h2>
-          <p>Сейчас это стартовая витрина. Цены, расписание и преподаватели ждут подтверждённых данных.</p>
+        <div className="section-heading split-heading">
+          <div>
+            <h2>Популярные курсы</h2>
+            <p>Три быстрых маршрута для выбора: язык, робототехника и вождение.</p>
+          </div>
+          <button className="text-button" type="button" onClick={() => navigate('/courses')}>
+            Все курсы
+          </button>
         </div>
-        <div className="program-grid">
+        <div className="program-grid program-grid--featured">
           {popularPrograms.map(({ direction, program }) => (
             <ProgramCard
               key={`${direction.slug}-${program.slug}`}
@@ -519,96 +544,16 @@ function HomePage({
             />
           ))}
         </div>
-        <div className="course-photo-pair" aria-label="Занятия в Практике">
-          <StoryPhoto
-            src="assets/home-art-teacher.webp"
-            alt="Преподаватель творческого курса рисует фирменный цветок на занятии."
-            caption="Творчество с преподавателем"
-            variant="portrait"
-          />
-          <StoryPhoto
-            src="assets/home-driving-instructor.webp"
-            alt="Инструктор автошколы у синего автомобиля держит планшет и ключ."
-            caption="Автошкола как понятный маршрут"
-            variant="portrait"
-          />
-        </div>
       </section>
 
-      <section className="section branch-preview">
-        <div className="branch-copy">
-          <h2>Ближайший филиал без угадывания</h2>
-          <p>
-            В этой версии филиалы показаны как структура выбора. Реальные адреса нужно
-            заменить после передачи подтверждённого списка.
-          </p>
-          <button className="secondary-button" type="button" onClick={() => navigate('/filialy')}>
-            Выбрать филиал
-          </button>
-        </div>
-        <div className="branch-stack">
-          <figure className="branch-photo">
-            <img src="assets/home-reception.webp" alt="Ресепшен и зона ожидания образовательного центра Практика." loading="lazy" />
-          </figure>
-          <BranchList compact navigate={navigate} />
-        </div>
-      </section>
+      <HomeBranchesBlock navigate={navigate} />
 
-      <section className="section people-section">
-        <div className="section-heading">
-          <h2>Преподаватели и инструкторы</h2>
-          <p>
-            Блок предусмотрен в структуре. Имена, роли, фото и опыт не добавлены, потому
-            что в ТЗ нет подтверждённых данных.
-          </p>
-        </div>
-        <div className="people-gallery people-gallery--three">
-          <StoryPhoto
-            src="assets/home-method-cards.webp"
-            alt="Сотрудник Практики раскладывает карточки методики на учебном столе."
-            caption="Методика собирается руками"
-            variant="portrait"
-          />
-          <StoryPhoto
-            src="assets/home-robotics-teacher.webp"
-            alt="Преподаватель робототехники держит учебного робота в аудитории."
-            caption="Преподаватели показывают на практике"
-            variant="portrait"
-          />
-          <StoryPhoto
-            src="assets/home-team-kitchen.webp"
-            alt="Команда Практики общается в зоне кофе с фирменными кружками."
-            caption="Центр живёт не только в аудитории"
-          />
-        </div>
-        <div className="confirmation-strip">
-          <span>Требуется контент</span>
-          <strong>фото, роли, направления, регалии и правила публикации</strong>
-        </div>
-      </section>
-
-      <section className="section">
-        <FAQ
-          items={[
-            {
-              question: 'Можно ли выбрать направление без звонка?',
-              answer: 'Да. Каталог и переключатель аудитории помогают сузить выбор до заявки.',
-            },
-            {
-              question: 'Почему нет точных цен?',
-              answer:
-                'В исходном ТЗ цены не указаны. Чтобы не придумывать коммерческие условия, сайт показывает места, куда они будут добавлены после подтверждения.',
-            },
-            {
-              question: 'Можно ли подключить amoCRM?',
-              answer:
-                'Форма уже хранит страницу, referer и UTM-поля в скрытых данных, чтобы подготовить будущую интеграцию.',
-            },
-          ]}
-        />
-      </section>
-
-      <LeadSection selectedDirection={directions[0]} />
+      <LeadSection
+        selectedDirection={directions[0]}
+        audience={audience}
+        source="home-final-cta"
+        onOpenLead={openLead}
+      />
       </div>
     </>
   );
@@ -672,100 +617,113 @@ function AudienceStageCard({
   );
 }
 
-function BenefitBadges() {
+function MethodSteps() {
   return (
-    <div className="benefit-badge-rail" aria-label="Преимущества Практики">
-      {advantageBadges.map((badge, index) => (
-        <div className={`benefit-hanger benefit-hanger--${index + 1}`} key={badge.title}>
-          <span className="badge-strap" />
-          <span className="badge-clip" />
-          <article className="benefit-badge">
-            <span className="badge-ring" />
-            <div className={`badge-pattern badge-pattern--${index + 1}`} aria-hidden="true">
-              <span />
-            </div>
-            <div className="badge-body">
-              <BenefitIcon icon={badge.icon} />
-              <h3>{badge.title}</h3>
-              <p>{badge.text}</p>
-            </div>
-          </article>
-        </div>
+    <div className="method-steps" aria-label="Как устроено обучение">
+      {methodSteps.map((step) => (
+        <article className="method-step" key={step.number}>
+          <span>{step.number}</span>
+          <h3>{step.title}</h3>
+          <p>{step.text}</p>
+        </article>
       ))}
     </div>
   );
 }
 
-function BenefitIcon({ icon }: { icon: (typeof advantageBadges)[number]['icon'] }) {
-  const common = {
-    width: 42,
-    height: 42,
-    viewBox: '0 0 48 48',
-    fill: 'none',
-    xmlns: 'http://www.w3.org/2000/svg',
-    'aria-hidden': true,
-  };
+function HomeBranchesBlock({ navigate }: { navigate: (path: string) => void }) {
+  const visibleReviews = activeBranches.flatMap((branch) => branch.reviews).slice(0, 2);
+  const cityOptions = useMemo(() => uniqueValues(activeBranches.map((branch) => branch.city)), []);
+  const [selectedCity, setSelectedCity] = useState(cityOptions[0] ?? '');
+  const districtOptions = useMemo(() => {
+    const source = selectedCity ? activeBranches.filter((branch) => branch.city === selectedCity) : activeBranches;
+    return uniqueValues(source.map((branch) => branch.district));
+  }, [selectedCity]);
+  const [selectedDistrict, setSelectedDistrict] = useState('');
 
-  if (icon === 'practice') {
-    return (
-      <svg className="badge-icon" {...common}>
-        <path d="M9 30c7-15 19-17 30-12" />
-        <path d="M15 32c7 6 17 6 25-2" />
-        <path d="M31 10l7 7-8 2" />
-      </svg>
-    );
-  }
+  useEffect(() => {
+    if (selectedDistrict && !districtOptions.includes(selectedDistrict)) {
+      setSelectedDistrict('');
+    }
+  }, [districtOptions, selectedDistrict]);
 
-  if (icon === 'group') {
-    return (
-      <svg className="badge-icon" {...common}>
-        <path d="M16 20a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
-        <path d="M32 22a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
-        <path d="M7 39c2-8 8-12 16-10 5 1 8 4 10 10" />
-        <path d="M27 30c6-1 11 2 14 8" />
-      </svg>
-    );
-  }
+  const filteredBranches = activeBranches.filter((branch) => {
+    const cityMatch = selectedCity ? branch.city === selectedCity : true;
+    const districtMatch = selectedDistrict ? branch.district === selectedDistrict : true;
+    return cityMatch && districtMatch;
+  });
+  const [activeBranchId, setActiveBranchId] = useState(filteredBranches[0]?.id ?? activeBranches[0]?.id ?? '');
 
-  if (icon === 'teacher') {
-    return (
-      <svg className="badge-icon" {...common}>
-        <path d="M12 34V13h24v17" />
-        <path d="M17 18h14" />
-        <path d="M17 24h9" />
-        <path d="M30 36l5 5 6-14" />
-      </svg>
-    );
-  }
-
-  if (icon === 'ages') {
-    return (
-      <svg className="badge-icon" {...common}>
-        <path d="M12 34c0-8 4-13 10-13s10 5 10 13" />
-        <path d="M22 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" />
-        <path d="M34 31c4 1 7 4 8 8" />
-        <path d="M34 22a4 4 0 1 0 0-8" />
-      </svg>
-    );
-  }
-
-  if (icon === 'branch') {
-    return (
-      <svg className="badge-icon" {...common}>
-        <path d="M12 40V18l12-8 12 8v22" />
-        <path d="M20 40V27h8v13" />
-        <path d="M14 20h20" />
-        <path d="M10 40h28" />
-      </svg>
-    );
-  }
+  useEffect(() => {
+    if (!filteredBranches.some((branch) => branch.id === activeBranchId)) {
+      setActiveBranchId(filteredBranches[0]?.id ?? '');
+    }
+  }, [activeBranchId, filteredBranches]);
 
   return (
-    <svg className="badge-icon" {...common}>
-      <path d="M12 12h24v24H12z" />
-      <path d="M18 25l5 5 9-12" />
-      <path d="M10 18c4-5 8-7 14-7" />
-    </svg>
+    <section className={visibleReviews.length ? 'section home-branches' : 'section home-branches home-branches--map-only'}>
+      {visibleReviews.length ? (
+        <div className="home-reviews">
+          <h2>Вам нравится</h2>
+          <div className="review-grid">
+            {visibleReviews.map((review) => (
+              <article className="review-card" key={review.id}>
+                <strong>{review.author}</strong>
+                <p>{review.text}</p>
+                <span>{review.context}</span>
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      <div className="home-branch-picker">
+        <div className="section-heading split-heading">
+          <div>
+            <h2>Выберите филиал</h2>
+            <p>Схема помогает быстро сравнить районы и перейти на страницу нужной точки.</p>
+          </div>
+          <button className="text-button" type="button" onClick={() => navigate('/filialy')}>
+            Все филиалы
+          </button>
+        </div>
+        <div className="branch-picker-controls">
+          <label className="field compact-field">
+            <span>Город</span>
+            <select value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
+              <option value="">Любой</option>
+              {cityOptions.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="field compact-field">
+            <span>Район</span>
+            <select value={selectedDistrict} onChange={(event) => setSelectedDistrict(event.target.value)}>
+              <option value="">Любой</option>
+              {districtOptions.map((district) => (
+                <option key={district} value={district}>
+                  {district}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {filteredBranches.length ? (
+          <BranchMap
+            branches={filteredBranches}
+            activeBranchId={activeBranchId}
+            onActivate={setActiveBranchId}
+            navigate={navigate}
+            compact
+          />
+        ) : (
+          <div className="empty-state">По выбранным фильтрам филиалов нет.</div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -901,15 +859,17 @@ function AudiencePage({ audience, navigate }: { audience: Audience; navigate: (p
 function DirectionPage({
   direction,
   navigate,
+  openLead,
 }: {
   direction: Direction;
   navigate: (path: string) => void;
+  openLead: (context: LeadContext) => void;
 }) {
   const availableBranches = activeBranches.filter((branch) => branch.directionIds.includes(direction.slug));
 
   return (
     <>
-      <DirectionHero direction={direction} navigate={navigate} />
+      <DirectionHero direction={direction} navigate={navigate} openLead={openLead} />
       <section className="section">
         <Breadcrumbs
           items={[
@@ -943,13 +903,8 @@ function DirectionPage({
       <section className="section detail-grid-section">
         <InfoPanel title="Формат, продолжительность и стоимость">
           <p>
-            Структура блока готова. Конкретные форматы, длительность, расписание и цены
-            нужно добавить после подтверждения коммерческих данных.
-          </p>
-        </InfoPanel>
-        <InfoPanel title="Преподаватели или инструкторы">
-          <p>
-            Имена, роли, фото и биографии не добавлены без подтверждённых материалов.
+            Формат и длительность зависят от программы, возраста ученика и удобного филиала.
+            Подберём подходящий вариант в заявке.
           </p>
         </InfoPanel>
         <InfoPanel title="Филиалы направления">
@@ -962,15 +917,12 @@ function DirectionPage({
             ))}
           </div>
         </InfoPanel>
-        <InfoPanel title="Отзывы">
-          <p>Блок предусмотрен, но реальные отзывы не выдуманы.</p>
-        </InfoPanel>
       </section>
       <section className="section">
         <FAQ items={direction.faqs} />
       </section>
       <RelatedDirections active={direction.slug} navigate={navigate} />
-      <LeadSection selectedDirection={direction} />
+      <LeadSection selectedDirection={direction} source="direction-final-cta" onOpenLead={openLead} />
     </>
   );
 }
@@ -979,10 +931,12 @@ function ProgramPage({
   direction,
   program,
   navigate,
+  openLead,
 }: {
   direction: Direction;
   program: Program;
   navigate: (path: string) => void;
+  openLead: (context: LeadContext) => void;
 }) {
   return (
     <>
@@ -999,7 +953,11 @@ function ProgramPage({
           <div>
             <h1>{program.title}</h1>
             <p>{program.description}</p>
-            <button className="primary-button" type="button" onClick={() => navigate('/contacts')}>
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => openLead({ source: 'program-hero', selectedDirection: direction, selectedProgram: program })}
+            >
               Записаться на консультацию
             </button>
           </div>
@@ -1033,10 +991,15 @@ function ProgramPage({
           <p>{program.result}</p>
         </InfoPanel>
         <InfoPanel title="Цена и филиалы">
-          <p>Цена и доступные филиалы требуют подтверждения.</p>
+          <p>{program.priceFrom ? `Стоимость курса: от ${program.priceFrom} ₽.` : 'Стоимость зависит от группы и филиала.'}</p>
         </InfoPanel>
       </section>
-      <LeadSection selectedDirection={direction} selectedProgram={program} />
+      <LeadSection
+        selectedDirection={direction}
+        selectedProgram={program}
+        source="program-final-cta"
+        onOpenLead={openLead}
+      />
     </>
   );
 }
@@ -1055,7 +1018,13 @@ function uniqueValues(values: string[]) {
   return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b, 'ru'));
 }
 
-function BranchesPage({ navigate }: { navigate: (path: string) => void }) {
+function BranchesPage({
+  navigate,
+  openLead,
+}: {
+  navigate: (path: string) => void;
+  openLead: (context: LeadContext) => void;
+}) {
   const initialParams = new URLSearchParams(window.location.search);
   const [selectedCity, setSelectedCity] = useState(initialParams.get('city') ?? '');
   const [selectedDistrict, setSelectedDistrict] = useState(initialParams.get('district') ?? '');
@@ -1126,8 +1095,7 @@ function BranchesPage({ navigate }: { navigate: (path: string) => void }) {
             <span className="eyebrow">Все филиалы</span>
             <h1>Филиалы рядом</h1>
             <p>
-              Выберите город, район и направление. Сейчас показаны демонстрационные точки: реальные адреса, телефоны и
-              расписание нужно добавить после подтверждения.
+              Выберите город, район и направление, чтобы увидеть подходящие занятия рядом с вами.
             </p>
           </div>
           <div className="branch-filters" aria-label="Фильтры филиалов">
@@ -1192,15 +1160,23 @@ function BranchesPage({ navigate }: { navigate: (path: string) => void }) {
           </div>
         )}
       </section>
-      <LeadSection />
+      <LeadSection source="branches-final-cta" onOpenLead={openLead} />
     </>
   );
 }
 
-function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: string) => void }) {
+function BranchPage({
+  branch,
+  navigate,
+  openLead,
+}: {
+  branch: Branch;
+  navigate: (path: string) => void;
+  openLead: (context: LeadContext) => void;
+}) {
   const directionsInBranch = branchDirections(branch);
   const coursesInBranch = branchCourses(branch);
-  const scrollToLead = () => document.getElementById('lead')?.scrollIntoView({ behavior: 'smooth' });
+  const branchFacts = [branch.address, branch.nearestMetro, branch.workingHours, branch.ageGroups.join(' · ')].filter(Boolean);
 
   return (
     <>
@@ -1220,26 +1196,26 @@ function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: str
               <span className="eyebrow">Страница филиала</span>
               <h1>{branch.name}</h1>
               <p>{branch.fullDescription}</p>
-              {branch.mock ? <span className="mock-note">Демо-данные: заменить после подтверждения</span> : null}
-              <div className="branch-facts">
-                <span>{branch.address}</span>
-                <span>{branch.nearestMetro}</span>
-                <span>{branch.workingHours}</span>
-                <span>{branch.ageGroups.join(' · ')}</span>
-              </div>
+              {branchFacts.length ? (
+                <div className="branch-facts">
+                  {branchFacts.map((fact) => (
+                    <span key={fact}>{fact}</span>
+                  ))}
+                </div>
+              ) : null}
               <div className="hero-actions">
-                <button className="primary-button" type="button" onClick={scrollToLead}>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={() => openLead({ source: 'branch-hero', selectedBranch: branch })}
+                >
                   Записаться
                 </button>
                 {branch.routeUrl ? (
                   <a className="secondary-button route-link" href={branch.routeUrl} target="_blank" rel="noreferrer">
                     Построить маршрут
                   </a>
-                ) : (
-                  <button className="secondary-button" type="button" disabled>
-                    Маршрут после подтверждения
-                  </button>
-                )}
+                ) : null}
               </div>
             </div>
             <div className="branch-hero-media" aria-label="Фото филиала">
@@ -1273,7 +1249,7 @@ function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: str
       <section className="section branch-detail-section branch-course-section">
         <div className="section-heading">
           <h2>Курсы в филиале</h2>
-          <p>Это демонстрационная выборка из общего каталога. Точный набор программ нужно подтвердить.</p>
+          <p>Набор программ связан с направлениями этого филиала.</p>
         </div>
         <div className="program-grid">
           {coursesInBranch.map((program) => (
@@ -1291,7 +1267,6 @@ function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: str
         <section className="section branch-detail-section">
           <div className="section-heading">
             <h2>Преподаватели</h2>
-            <p>Блок появится только после передачи подтверждённых карточек преподавателей.</p>
           </div>
           <div className="teacher-grid">
             {branch.teachers.map((teacher) => (
@@ -1306,34 +1281,36 @@ function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: str
         </section>
       ) : null}
 
-      <section className="section branch-detail-section">
-        <div className="detail-grid-section">
-          <InfoPanel title="Расписание">
+      {branch.schedule.length || branch.address || branch.travelTime ? (
+        <section className="section branch-detail-section">
+          <div className="detail-grid-section">
             {branch.schedule.length ? (
-              <div className="schedule-list">
-                {branch.schedule.map((item) => {
-                  const direction = findDirection(item.directionId);
-                  return (
-                    <div className="schedule-row" key={item.id}>
-                      <strong>{item.time}</strong>
-                      <span>{direction?.shortTitle ?? item.directionId}</span>
-                      <span>{item.ageGroup}</span>
-                      <span>{item.seatsStatus}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="empty-state">Ближайшие даты и группы нужно добавить после подтверждения расписания.</div>
-            )}
-          </InfoPanel>
-          <InfoPanel title="Как добраться">
-            <p>{branch.address}</p>
-            <p>{branch.travelTime}</p>
-            <BranchMap branches={[branch]} activeBranchId={branch.id} onActivate={() => undefined} navigate={navigate} compact />
-          </InfoPanel>
-        </div>
-      </section>
+              <InfoPanel title="Расписание">
+                <div className="schedule-list">
+                  {branch.schedule.map((item) => {
+                    const direction = findDirection(item.directionId);
+                    return (
+                      <div className="schedule-row" key={item.id}>
+                        <strong>{item.time}</strong>
+                        <span>{direction?.shortTitle ?? item.directionId}</span>
+                        <span>{item.ageGroup}</span>
+                        <span>{item.seatsStatus}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </InfoPanel>
+            ) : null}
+            {branch.address || branch.travelTime ? (
+              <InfoPanel title="Как добраться">
+                {branch.address ? <p>{branch.address}</p> : null}
+                {branch.travelTime ? <p>{branch.travelTime}</p> : null}
+                <BranchMap branches={[branch]} activeBranchId={branch.id} onActivate={() => undefined} navigate={navigate} compact />
+              </InfoPanel>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section branch-gallery-section">
         <div className="section-heading">
@@ -1366,7 +1343,7 @@ function BranchPage({ branch, navigate }: { branch: Branch; navigate: (path: str
         </section>
       ) : null}
 
-      <LeadSection selectedBranch={branch} />
+      <LeadSection selectedBranch={branch} source="branch-final-cta" onOpenLead={openLead} />
     </>
   );
 }
@@ -1405,16 +1382,9 @@ function AboutPage({ navigate }: { navigate: (path: string) => void }) {
 
 function ContactsPage() {
   return (
-    <InnerPage title="Запись и контакты" intro="Форма работает локально и готова к последующей интеграции с amoCRM. Контакты не выдуманы без подтверждения.">
-      <div className="contacts-grid">
-        <LeadForm />
-        <InfoPanel title="Контакты требуют подтверждения">
-          <p>Телефон, мессенджеры, юридические данные и ссылки на документы нужно добавить после передачи официальной информации.</p>
-          <div className="disabled-actions" aria-label="Контактные каналы требуют подтверждения">
-            <span>Телефон будет добавлен</span>
-            <span>Мессенджер будет добавлен</span>
-          </div>
-        </InfoPanel>
+    <InnerPage title="Запись на занятие" intro="Оставьте контакты, и мы подберём направление, возрастную группу и удобный формат.">
+      <div className="contacts-grid contacts-grid--single">
+        <LeadForm source="contacts-page" />
       </div>
     </InnerPage>
   );
@@ -1442,7 +1412,15 @@ function InnerPage({ title, intro, children }: { title: string; intro: string; c
   );
 }
 
-function DirectionHero({ direction, navigate }: { direction: Direction; navigate: (path: string) => void }) {
+function DirectionHero({
+  direction,
+  navigate,
+  openLead,
+}: {
+  direction: Direction;
+  navigate: (path: string) => void;
+  openLead: (context: LeadContext) => void;
+}) {
   const heroImage = direction.heroImage ?? direction.image;
 
   return (
@@ -1468,7 +1446,11 @@ function DirectionHero({ direction, navigate }: { direction: Direction; navigate
               <span key={item}>{audienceLabels[item]}</span>
             ))}
           </div>
-          <button className="primary-button" type="button" onClick={() => navigate('/contacts')}>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => openLead({ source: 'direction-hero', selectedDirection: direction })}
+          >
             Записаться на пробное
           </button>
         </div>
@@ -1519,8 +1501,18 @@ function DirectionCard({
 }) {
   const examples = direction.courses.slice(0, 4).map((program) => program.title).join(' · ');
 
+  if (compact) {
+    return (
+      <button className="direction-card compact" type="button" onClick={() => navigate(directionPath(direction))}>
+        <img src={direction.image} alt="" loading="lazy" />
+        <span>{homeDirectionLabels[direction.slug] ?? direction.shortTitle}</span>
+        <strong aria-hidden="true">↗</strong>
+      </button>
+    );
+  }
+
   return (
-    <article className={compact ? 'direction-card compact' : 'direction-card'}>
+    <article className="direction-card">
       <img src={direction.image} alt="" />
       <div>
         <h3>{direction.shortTitle}</h3>
@@ -1568,6 +1560,7 @@ function ProgramCard({
       </div>
       <h3>{program.title}</h3>
       <p>{program.description}</p>
+      {program.priceFrom ? <strong className="program-price">от {program.priceFrom} ₽</strong> : null}
       <button className="text-button" type="button" onClick={() => navigate(programPath(direction, program))}>
         Подробнее
       </button>
@@ -1627,9 +1620,8 @@ function BranchCard({
           <h3>{branch.shortName}</h3>
           <p>{branch.city} · {branch.district}</p>
         </div>
-        {branch.mock ? <span className="mock-pill">демо</span> : null}
       </div>
-      <strong>{branch.address}</strong>
+      {branch.address ? <strong>{branch.address}</strong> : null}
       <p>{directionsText}</p>
       <div className="branch-card-actions">
         {onActivate ? (
@@ -1735,10 +1727,16 @@ function LeadSection({
   selectedDirection,
   selectedProgram,
   selectedBranch,
+  audience,
+  source = 'section-cta',
+  onOpenLead,
 }: {
   selectedDirection?: Direction;
   selectedProgram?: Program;
   selectedBranch?: Branch;
+  audience?: Audience;
+  source?: string;
+  onOpenLead: (context: LeadContext) => void;
 }) {
   return (
     <section className="section lead-section" id="lead">
@@ -1756,12 +1754,87 @@ function LeadSection({
         <p>
           Подберём направление, аудиторию и удобный филиал для первого занятия.
         </p>
+        <button
+          className="primary-button"
+          type="button"
+          onClick={() => onOpenLead({ selectedDirection, selectedProgram, selectedBranch, audience, source })}
+        >
+          Найти курс
+        </button>
         <div className="lead-brand-row" aria-hidden="true">
           <BrandLogo />
         </div>
       </div>
-      <LeadForm selectedDirection={selectedDirection} selectedProgram={selectedProgram} selectedBranch={selectedBranch} />
     </section>
+  );
+}
+
+function LeadModal({ context, onClose }: { context: LeadContext; onClose: () => void }) {
+  const modalRef = useRef<HTMLElement | null>(null);
+  const title = context.selectedProgram?.title
+    ? `Запись: ${context.selectedProgram.title}`
+    : 'Подобрать занятие';
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !modalRef.current) return;
+
+      const focusable = Array.from(
+        modalRef.current.querySelectorAll<HTMLElement>(
+          'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => !element.hasAttribute('disabled'));
+
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    window.setTimeout(() => modalRef.current?.querySelector<HTMLElement>('input, select, button')?.focus(), 0);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="lead-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title" ref={modalRef}>
+        <button className="modal-close" type="button" aria-label="Закрыть форму" onClick={onClose}>
+          ×
+        </button>
+        <div className="section-heading">
+          <h2 id="lead-modal-title">{title}</h2>
+          <p>Заполните короткую форму, чтобы мы подобрали удобный вариант занятия.</p>
+        </div>
+        <LeadForm
+          selectedDirection={context.selectedDirection}
+          selectedProgram={context.selectedProgram}
+          selectedBranch={context.selectedBranch}
+          audience={context.audience}
+          source={context.source}
+        />
+      </section>
+    </div>
   );
 }
 
@@ -1769,22 +1842,24 @@ function LeadForm({
   selectedDirection,
   selectedProgram,
   selectedBranch,
+  audience,
+  source = 'lead-form',
 }: {
   selectedDirection?: Direction;
   selectedProgram?: Program;
   selectedBranch?: Branch;
+  audience?: Audience;
+  source?: string;
 }) {
   const [submitted, setSubmitted] = useState(false);
   const [directionSlug, setDirectionSlug] = useState(selectedDirection?.slug ?? directions[0].slug);
-  const [branchId, setBranchId] = useState(selectedBranch?.id ?? activeBranches[0]?.id ?? '');
   const tracking = useMemo(trackingFields, []);
-  const currentBranch = activeBranches.find((branch) => branch.id === branchId);
 
   useEffect(() => {
-    if (selectedBranch) {
-      setBranchId(selectedBranch.id);
+    if (selectedDirection) {
+      setDirectionSlug(selectedDirection.slug);
     }
-  }, [selectedBranch]);
+  }, [selectedDirection]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -1794,8 +1869,8 @@ function LeadForm({
   if (submitted) {
     return (
       <div className="success-state" role="status">
-        <strong>Заявка собрана локально</strong>
-        <p>После подключения backend или amoCRM этот сценарий можно заменить реальной отправкой.</p>
+        <strong>Спасибо, заявка заполнена.</strong>
+        <p>Мы свяжемся с вами по указанному телефону.</p>
       </div>
     );
   }
@@ -1824,27 +1899,22 @@ function LeadForm({
         <span>Возраст ученика</span>
         <input name="studentAge" placeholder="Например, 10 лет или взрослый" />
       </label>
-      <label className="field">
-        <span>Удобный филиал</span>
-        <select name="branch" value={branchId} onChange={(event) => setBranchId(event.target.value)}>
-          {activeBranches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
-      </label>
       <label className="consent">
         <input name="consent" type="checkbox" required />
-        <span>Согласен на обработку данных. Ссылка на официальный документ требует подтверждения.</span>
+        <span>Согласен на обработку персональных данных.</span>
       </label>
       {Object.entries(tracking).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <input type="hidden" name="pageUrl" value={window.location.href} />
       <input type="hidden" name="referer" value={document.referrer} />
+      <input type="hidden" name="audience" value={audience ?? ''} />
+      <input type="hidden" name="source" value={source} />
+      <input type="hidden" name="directionId" value={directionSlug} />
+      <input type="hidden" name="programId" value={selectedProgram?.id ?? ''} />
       <input type="hidden" name="program" value={selectedProgram?.title ?? ''} />
-      <input type="hidden" name="branchName" value={currentBranch?.name ?? ''} />
+      <input type="hidden" name="branchId" value={selectedBranch?.id ?? ''} />
+      <input type="hidden" name="branchName" value={selectedBranch?.name ?? ''} />
       <button className="primary-button" type="submit">
         Отправить заявку
       </button>
@@ -1940,9 +2010,7 @@ function Footer({ navigate }: { navigate: (path: string) => void }) {
           </a>
         ))}
       </div>
-      <div className="footer-note">
-        Контакты, документы и юридические данные требуют подтверждения.
-      </div>
+      <div className="footer-note">Практика через действие, пробу и понятный следующий шаг.</div>
     </footer>
   );
 }

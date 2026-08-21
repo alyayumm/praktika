@@ -36,6 +36,7 @@ export interface Course {
   format: CourseFormat;
   formatLabel: string;
   image?: string;
+  priceFrom?: string;
   duration?: string;
   groupSize?: string;
   popular?: boolean;
@@ -189,7 +190,7 @@ export const directions: Direction[] = [
       course({ directionId: 'languages', slug: 'english-a1', title: 'Английский A1', description: 'Полноценный стартовый курс английского языка для базового общения.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', popular: true, result: 'Ученик понимает базовые фразы и начинает говорить в простых ситуациях.' }),
       course({ directionId: 'languages', slug: 'english-a2', title: 'Английский A2', description: 'Курс для продолжения: бытовые темы, грамматика и регулярная разговорная практика.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Появляется устойчивый словарь для повседневного общения.' }),
       course({ directionId: 'languages', slug: 'english-b1', title: 'Английский B1', description: 'Программа для уверенного общения, чтения и обсуждения знакомых тем.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Ученик поддерживает диалог и объясняет свою мысль без долгой подготовки.' }),
-      course({ directionId: 'languages', slug: 'spoken-english', title: 'Разговорный английский', description: 'Практический курс для диалогов, обсуждений и снятия языкового барьера.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · мини-группы', image: 'assets/mascot-english-guard.webp', popular: true, result: 'Больше живой речи и меньше страха ошибиться.' }),
+      course({ directionId: 'languages', slug: 'spoken-english', title: 'Разговорный английский', description: 'Практический курс для диалогов, обсуждений и снятия языкового барьера.', audience: ['teens', 'adults'], age: '14+', format: 'course', formatLabel: 'Офлайн · мини-группы', image: 'assets/home-discussion.webp', priceFrom: '4 900', popular: true, result: 'Больше живой речи и меньше страха ошибиться.' }),
       course({ directionId: 'languages', slug: 'business-english', title: 'Деловой английский', description: 'Курс для рабочих ситуаций: переписка, встречи, презентации и переговоры.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-english-guard.webp', result: 'Ученик готовит рабочие фразы и сценарии под свою профессиональную задачу.' }),
       course({ directionId: 'languages', slug: 'english-kids', title: 'Английский для детей', description: 'Мягкое знакомство с языком через речь, игры, повторение и обратную связь.', audience: ['children'], age: '6+', format: 'course', formatLabel: 'Офлайн · детские группы', image: 'assets/mascot-english-guard.webp', result: 'Ребёнок понимает простые фразы и отвечает вслух.' }),
       course({ directionId: 'languages', slug: 'french-start', title: 'Французский с нуля', description: 'Стартовый курс французского языка: произношение, базовые фразы и первые диалоги.', audience: ['teens', 'adults'], age: '12+', format: 'course', formatLabel: 'Офлайн · группы', image: 'assets/mascot-french-baguette.webp', result: 'Ученик начинает читать, произносить и говорить в простых ситуациях.' }),
@@ -299,7 +300,7 @@ export const directions: Direction[] = [
     doodle: 'Схемы, провода, детали и траектории',
     image: 'assets/direction-icon-robotics.png',
     courses: [
-      course({ directionId: 'robotics', slug: 'robotics-7-9', title: 'Робототехника 7-9 лет', description: 'Стартовый курс сборки, простых механизмов, команд и проверки результата.', audience: ['children'], age: '7+', format: 'course', formatLabel: 'Офлайн · детские группы', popular: true, result: 'Ребёнок связывает деталь, команду и движение модели.' }),
+      course({ directionId: 'robotics', slug: 'robotics-7-9', title: 'Робототехника 7-9 лет', description: 'Стартовый курс сборки, простых механизмов, команд и проверки результата.', audience: ['children'], age: '7+', format: 'course', formatLabel: 'Офлайн · детские группы', image: 'assets/home-robotics.webp', priceFrom: '4 900', popular: true, result: 'Ребёнок связывает деталь, команду и движение модели.' }),
       course({ directionId: 'robotics', slug: 'robotics-10-12', title: 'Робототехника 10-12 лет', description: 'Курс конструирования, датчиков, логики поведения и мини-проектов.', audience: ['children'], age: '10+', format: 'course', formatLabel: 'Офлайн · детские группы', result: 'Ученик собирает модель под задачу и тестирует гипотезы.' }),
       course({ directionId: 'robotics', slug: 'robotics-teens', title: 'Робототехника для подростков', description: 'Программа для более сложных инженерных задач, командной работы и проектной логики.', audience: ['teens'], age: '12+', format: 'course', formatLabel: 'Офлайн · подростковые группы', result: 'Подросток проектирует, собирает и дорабатывает роботизированную модель.' }),
       course({ directionId: 'robotics', slug: 'engineering-lab-kids', title: 'Инженерная лаборатория', description: 'Цельный курс экспериментов, конструирования и практических инженерных задач.', audience: ['children', 'teens'], age: '9+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Ученик учится думать через задачу, прототип и проверку.' }),
@@ -369,7 +370,7 @@ export const directions: Direction[] = [
       course({ directionId: 'business', slug: 'business-assistant', title: 'Бизнес-ассистент', description: 'Курс по организации задач, календаря, коммуникаций и материалов руководителя.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · группы', result: 'Участник умеет поддерживать рабочий контур руководителя.' }),
     ],
     outcomes: ['структурировать задачи', 'понимать роли и процессы', 'управлять следующим шагом'],
-    faqs: [{ question: 'Это MBA?', answer: 'Нет. Это практичные прикладные курсы, точные форматы требуют подтверждения.' }],
+    faqs: [{ question: 'Это MBA?', answer: 'Нет. Это практичные прикладные курсы с разбором рабочих задач.' }],
   }),
   direction({
     slug: 'communications',
@@ -489,23 +490,27 @@ export const directions: Direction[] = [
     heroImage: 'assets/mascot-driving.png',
     courses: [
       course({ directionId: 'driving', slug: 'category-a', title: 'Категория A', description: 'Курс подготовки к управлению мотоциклом при наличии программы направления.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик проходит цельный маршрут подготовки по категории.' }),
-      course({ directionId: 'driving', slug: 'category-a1', title: 'Категория A1', description: 'Курс подготовки по категории A1 при наличии подтверждённой программы.', audience: ['teens', 'adults'], age: '16+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик понимает требования категории и маршрут обучения.' }),
-      course({ directionId: 'driving', slug: 'category-b', title: 'Категория B', description: 'Полноценный курс подготовки водителей категории B: теория, практика и экзамен.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', popular: true, result: 'Ученик понимает правила, тренирует манёвры и готовится к экзаменационному маршруту.', modules: categoryBModules }),
+      course({ directionId: 'driving', slug: 'category-a1', title: 'Категория A1', description: 'Курс подготовки по категории A1: теория, практика и маршрут к экзамену.', audience: ['teens', 'adults'], age: '16+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик понимает требования категории и маршрут обучения.' }),
+      course({ directionId: 'driving', slug: 'category-b', title: 'Категория B', description: 'Полноценный курс подготовки водителей категории B: теория, практика и экзамен.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', image: 'assets/home-driving-instructor.webp', priceFrom: '4 900', popular: true, result: 'Ученик понимает правила, тренирует манёвры и готовится к экзаменационному маршруту.', modules: categoryBModules }),
       course({ directionId: 'driving', slug: 'category-c', title: 'Категория C', description: 'Курс подготовки по категории C при наличии соответствующей программы.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик проходит подготовку по требованиям категории.' }),
-      course({ directionId: 'driving', slug: 'category-d', title: 'Категория D', description: 'Курс подготовки по категории D при наличии подтверждённой программы.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик получает понятный маршрут подготовки по категории.' }),
+      course({ directionId: 'driving', slug: 'category-d', title: 'Категория D', description: 'Курс подготовки по категории D: теория, практика и требования к управлению.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик получает понятный маршрут подготовки по категории.' }),
       course({ directionId: 'driving', slug: 'category-be', title: 'Категория BE', description: 'Курс подготовки к управлению составом транспортных средств категории BE.', audience: ['adults'], age: '18+', format: 'course', formatLabel: 'Офлайн · теория и практика', result: 'Ученик разбирает требования и практические задачи категории.' }),
     ],
     outcomes: ['видеть обучение как маршрут', 'разбирать ошибки после практики', 'понимать требования к экзамену и дальнейшим шагам'],
     faqs: [
       { question: 'Категория B — это один курс?', answer: 'Да. Внутри него уже находятся ПДД, устройство автомобиля, безопасность, первая помощь и практика.' },
-      { question: 'Где проходят занятия?', answer: 'Филиалы для автошколы нужно подтвердить после передачи актуального списка адресов.' },
+      { question: 'Где проходят занятия?', answer: 'Филиал можно выбрать на странице филиалов или указать в заявке.' },
     ],
   }),
 ];
 
 export const allCourses: Course[] = directions.flatMap((item) => item.courses);
 
-export const popularCourses: Course[] = allCourses.filter((item) => item.popular).slice(0, 12);
+const popularCourseSlugs = ['spoken-english', 'robotics-7-9', 'category-b'];
+
+export const popularCourses: Course[] = popularCourseSlugs
+  .map((slug) => allCourses.find((item) => item.slug === slug))
+  .filter((item): item is Course => Boolean(item));
 
 export const siteMap = [
   { path: '/', label: 'Главная' },
